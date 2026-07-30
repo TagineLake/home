@@ -47,19 +47,6 @@
       "summary": "一套开箱即用的聊天 UI 组件，已被多个项目采用。",
       "content": "# Echo 即时通讯组件库\n\n提供会话、消息气泡、输入态等完整组件。\n\n```ts\nimport { Chat } from 'echo-ui';\n```\n\n已开源并收获不错的 star。",
       "order": 2
-    },
-    {
-      "id": "p3",
-      "title": "Pixel 像素小游戏合集",
-      "cover": "",
-      "tags": [
-        "游戏",
-        "Canvas"
-      ],
-      "status": "abandoned",
-      "summary": "曾计划做一系列怀旧像素小游戏，只完成了两个就搁置了。",
-      "content": "没有坚持下去，留在这里作为纪念，也提醒自己专注。",
-      "order": 3
     }
   ],
   "articles": [
