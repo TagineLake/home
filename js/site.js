@@ -56,6 +56,7 @@
       app.innerHTML = '<div class="section"><h2>加载失败</h2><p class="muted">' + esc(e.message) + '</p></div>';
     }
     window.scrollTo(0, 0);
+    bindCards();
     observeReveal();
   }
 
@@ -64,9 +65,9 @@
     const s = content.site, projects = content.projects || [], articles = content.articles || [];
     const feat = (projects.length ? '' : '') +
       `<div class="feat-grid">
-        <div class="feat" data-reveal><div class="ico">🚀</div><h3>作品库</h3><p>从成品到进行中、甚至失败与烂尾，真实记录我的创造。</p></div>
-        <div class="feat" data-reveal><div class="ico">📝</div><h3>文章</h3><p>关于技术、设计与思考的长文与随笔。</p></div>
-        <div class="feat" data-reveal><div class="ico">💡</div><h3>关于我</h3><p>我是谁，在做什么，相信什么。</p></div>
+        <div class="feat" data-go="#/projects" data-reveal><div class="ico">🚀</div><h3>作品库</h3><p>从成品到进行中、甚至失败与烂尾，真实记录我的创造。</p></div>
+        <div class="feat" data-go="#/articles" data-reveal><div class="ico">📝</div><h3>文章</h3><p>关于技术、设计与思考的长文与随笔。</p></div>
+        <div class="feat" data-go="#/about" data-reveal><div class="ico">💡</div><h3>关于我</h3><p>我是谁，在做什么，相信什么。</p></div>
       </div>`;
     app.innerHTML = `
       <section class="hero">
