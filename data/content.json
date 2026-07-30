@@ -23,7 +23,7 @@
   "projects": [
     {
       "id": "p1",
-      "title": "介入云端的官网平台-可部署在GitHub Pages",
+      "title": "yanzien个人官网平台-可部署在GitHub Pages、接入云端留言板的官网平台",
       "cover": "",
       "tags": [
         "官网",
