@@ -7,12 +7,12 @@
     "heroSubtitle": "开发者 / 创造者 —— 在这里记录我的作品、思考与探索。",
     "heroBtn1": "查看作品",
     "heroBtn2": "联系我",
-    "about": "# 关于我\n\n我是一名热爱创造的开发者，喜欢把想法变成能跑起来的东西。\n\n- 🚀 专注前端与全栈\n- 🎨 对设计与交互有近乎偏执的追求\n- 🌱 相信持续学习与长期主义\n\n> 做有趣的事，并把它做完。",
+    "about": "# 关于我（示例）\n\n我是一名热爱创造的开发者，喜欢把想法变成能跑起来的东西。\n\n- 🚀 专注前端与全栈\n- 🎨 对设计与交互有近乎偏执的追求\n- 🌱 相信持续学习与长期主义\n\n> 做有趣的事，并把它做完。",
     "contact": {
-      "email": "you@example.com",
+      "email": "yanzien2013@163.com",
       "github": "https://github.com/yanzien",
-      "wechat": "",
-      "other": ""
+      "wechat": "Young（QQ同号）",
+      "other": "13646680423"
     },
     "theme": {
       "primary": "#39d0ff",
