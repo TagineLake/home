@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台管理 · yanzien</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <!-- 登录 / 仓库配置 -->
+  <div id="loginView" class="login-view">
+    <form class="login-box" id="loginForm">
+      <h1>后台 · GitHub 同步</h1>
+      <p class="muted">内容直接保存到你的 GitHub 仓库（云端），无需服务器。</p>
+      <label>GitHub 用户名</label><input name="owner" placeholder="例如 yanzien" />
+      <label>仓库名</label><input name="repo" placeholder="例如 home" />
+      <label>分支</label><input name="branch" placeholder="main" value="main" />
+      <label>Personal Access Token</label><input name="token" type="password" placeholder="ghp_xxx（需 repo 权限）" />
+      <button class="btn" type="submit">连 接</button>
+      <div id="loginErr" class="err"></div>
+      <p class="muted small">Token 仅保存在你浏览器本地（localStorage），用于向仓库提交内容。需要 <b>repo</b> 权限。详见 README。</p>
+    </form>
+  </div>
+
+  <div id="adminView" class="admin-view" hidden>
+    <aside class="sidebar">
+      <div class="logo">⚙️ 管理后台</div>
+      <nav id="adminNav">
+        <a data-tab="dash" class="active">概览</a>
+        <a data-tab="site">站点设置</a>
+        <a data-tab="projects">作品管理</a>
+        <a data-tab="articles">文章管理</a>
+        <a data-tab="messages">留言管理</a>
+        <a data-tab="setting">设置 / 云端</a>
+      </nav>
+      <div class="side-foot">
+        <span id="whoami"></span>
+        <button class="btn ghost" id="logoutBtn">断开</button>
+      </div>
+    </aside>
+    <main class="admin-main"><div id="tabContent"></div></main>
+  </div>
+
+  <script src="./vendor/marked.min.js"></script>
+  <script src="./vendor/minimarkdown.js"></script>
+  <script src="./js/admin.js"></script>
+</body>
+</html>

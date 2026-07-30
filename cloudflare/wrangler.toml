@@ -1,0 +1,34 @@
+name = "yanzien-guestbook"
+compatibility_date = "2024-09-23"
+
+# ===== 存储二选一 =====
+# 方案 A：D1（推荐，强一致、可分页/索引）—— main 指向 worker.js
+# 方案 B：KV（你更熟悉）—— 把 main 改成 worker-kv.js，并改用下方 KV 绑定、注释掉 D1 绑定
+
+# --- 方案 A：D1 ---
+main = "worker.js"
+[[d1_databases]]
+binding = "DB"
+database_name = "yanzien-guestbook"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+
+# --- 方案 B：KV（取消上面注释的 D1 块，启用下面这块）---
+# main = "worker-kv.js"
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "REPLACE_WITH_YOUR_KV_ID"
+# # 注意若是旧版 kv_namespaces 语法，可用：
+# # [[kv_namespaces]]
+# # binding = "KV"
+# # id = "..."
+
+# 公开配置（可写死，非机密）
+[vars]
+# 允许调用留言 API 的站点来源（填你的 GitHub Pages 地址；用 * 则放行所有，便于本地调试）
+ALLOWED_ORIGIN = "https://yanzien.github.io"
+# 是否需要审核：留空表示新留言需站长审核(默认)；设为 "false" 则留言自动公开
+# REQUIRE_MODERATION = "false"
+
+# 机密配置（用 wrangler secret put 设置，不要写在这里）
+#   wrangler secret put ADMIN_TOKEN      # 后台审核用的管理员令牌（自己定一串随机串）
+#   wrangler secret put TURNSTILE_SECRET # 防机器人验证码 Turnstile 私钥（你已决定开启）

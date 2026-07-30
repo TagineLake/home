@@ -1,0 +1,13 @@
+本地预览: http://localhost:3000  （生产请部署到 GitHub Pages）
+C:\Users\xinyu6290\WorkBuddy\2026-07-29-13-21-56\yanzien-site\server.js:17
+  let pathname = decodeURIComponent(url.pathname);
+                 ^
+
+URIError: URI malformed
+    at decodeURIComponent (<anonymous>)
+    at Server.<anonymous> (C:\Users\xinyu6290\WorkBuddy\2026-07-29-13-21-56\yanzien-site\server.js:17:18)
+    at Server.emit (node:events:519:28)
+    at parserOnIncoming (node:_http_server:1186:12)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:125:17)
+
+Node.js v22.22.2

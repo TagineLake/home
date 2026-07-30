@@ -1,0 +1,84 @@
+{
+  "site": {
+    "name": "yanzien",
+    "title": "yanzien · 个人官网",
+    "announcement": "",
+    "heroTitle": "你好，我是 yanzien",
+    "heroSubtitle": "开发者 / 创造者 —— 在这里记录我的作品、思考与探索。",
+    "heroBtn1": "查看作品",
+    "heroBtn2": "联系我",
+    "about": "# 关于我\n\n我是一名热爱创造的开发者，喜欢把想法变成能跑起来的东西。\n\n- 🚀 专注前端与全栈\n- 🎨 对设计与交互有近乎偏执的追求\n- 🌱 相信持续学习与长期主义\n\n> 做有趣的事，并把它做完。",
+    "contact": {
+      "email": "you@example.com",
+      "github": "https://github.com/",
+      "wechat": "",
+      "other": ""
+    },
+    "theme": {
+      "primary": "#39d0ff",
+      "accent": "#7c5cff"
+    },
+    "favicon": ""
+  },
+  "projects": [
+    {
+      "id": "p1",
+      "title": "Nebula 数据可视化平台",
+      "cover": "",
+      "tags": ["可视化", "WebGL", "React"],
+      "status": "doing",
+      "summary": "将复杂数据转化为可交互的星空般的可视化界面。",
+      "content": "# Nebula 数据可视化平台\n\n一个把数据变成**艺术**的项目。\n\n## 技术亮点\n\n- 基于 WebGL 的百万级点渲染\n- 实时流式数据接入\n- 可拖拽的仪表盘编辑器\n\n## 进度\n\n目前处于核心引擎开发阶段。",
+      "order": 1
+    },
+    {
+      "id": "p2",
+      "title": "Echo 即时通讯组件库",
+      "cover": "",
+      "tags": ["通信", "组件库"],
+      "status": "done",
+      "summary": "一套开箱即用的聊天 UI 组件，已被多个项目采用。",
+      "content": "# Echo 即时通讯组件库\n\n提供会话、消息气泡、输入态等完整组件。\n\n```ts\nimport { Chat } from 'echo-ui';\n```\n\n已开源并收获不错的 star。",
+      "order": 2
+    },
+    {
+      "id": "p3",
+      "title": "Pixel 像素小游戏合集",
+      "cover": "",
+      "tags": ["游戏", "Canvas"],
+      "status": "abandoned",
+      "summary": "曾计划做一系列怀旧像素小游戏，只完成了两个就搁置了。",
+      "content": "没有坚持下去，留在这里作为纪念，也提醒自己专注。",
+      "order": 3
+    },
+    {
+      "id": "p4",
+      "title": "量子计算入门笔记",
+      "cover": "",
+      "tags": ["写作", "科普"],
+      "status": "failed",
+      "summary": "尝试系统梳理量子计算，但因资料复杂度半途而废。",
+      "content": "失败也是学习的一部分。",
+      "order": 4
+    }
+  ],
+  "articles": [
+    {
+      "id": "a1",
+      "title": "如何打造一个有「科技感」的个人网站",
+      "cover": "",
+      "tags": ["设计", "前端"],
+      "content": "# 如何打造一个有「科技感」的个人网站\n\n> 科技感 ≠ 堆特效，而是**克制的动效 + 清晰的层级 + 一致的视觉语言**。\n\n## 1. 深色背景 + 霓虹点缀\n\n深色能压住杂乱，霓虹色负责引导视线。\n\n## 2. 入场动画\n\n用 IntersectionObserver 做滚动揭示，比满屏闪烁更高级。\n\n## 3. 留白与分隔\n\n每个板块之间用足够的间距和微妙的分割线隔开。",
+      "published": true,
+      "order": 1,
+      "createdAt": "2026-07-20"
+    }
+  ],
+  "messagesConfig": {
+    "mode": "cloudflare",
+    "workerUrl": "https://yanzien-guestbook.yanzien2013.workers.dev/",
+    "turnstileSiteKey": "0x4AAAAAAAEA6JYcA648qiIre",
+    "utterancesRepo": "",
+    "formEndpoint": ""
+  }
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>yanzien · 个人官网</title>
+  <meta name="description" content="yanzien 的个人官网 —— 作品、文章与思考。" />
+  <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <!-- 不蒜子 访客计数（免费，无需注册） -->
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a class="logo" href="#/" id="logo">✦ yanzien</a>
+      <nav class="links" id="links">
+        <a href="#/" data-r="/">首页</a>
+        <a href="#/projects" data-r="/projects">作品库</a>
+        <a href="#/articles" data-r="/articles">文章</a>
+        <a href="#/about" data-r="/about">关于</a>
+        <a href="#/contact" data-r="/contact">联系</a>
+        <a href="#/guestbook" data-r="/guestbook">留言</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="菜单">☰</button>
+    </div>
+  </header>
+
+  <div class="announce" id="announce" hidden></div>
+
+  <main id="app"></main>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <span id="footName">yanzien</span>
+      <span class="counter">访客 <b><span id="busuanzi_value_site_uv">0</span></b> · 浏览 <b><span id="busuanzi_value_site_pv">0</span></b></span>
+      <a href="./admin.html" class="admin-link">后台管理</a>
+    </div>
+  </footer>
+
+  <script src="./vendor/marked.min.js"></script>
+  <script src="./vendor/minimarkdown.js"></script>
+  <script src="./js/site.js"></script>
+</body>
+</html>
