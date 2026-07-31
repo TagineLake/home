@@ -2,7 +2,7 @@
   "site": {
     "name": "yanzien",
     "title": "yanzien · 个人官网",
-    "announcement": "留言板暂时有BUG，建议不要使用（人机验证卡不出来）",
+    "announcement": "留言板BUG已修，快来使用吧！",
     "heroTitle": "你好，我是 yanzien",
     "heroSubtitle": "开发者 / 创造者 —— 在这里记录我的作品、思考与探索。<br>（网页刷不出很正常，多刷几次即可）",
     "heroBtn1": "查看作品",
@@ -26,11 +26,15 @@
       "email": "yanzien2013@163.com",
       "github": "https://github.com/yanzien",
       "wechat": "Young（QQ同号）",
-      "other": "13646680423",
+      "other": "",
       "cards": [
         {
-          "name": "商务合作",
-          "content": "欢迎通过邮箱或微信联系，备注来意。"
+          "name": "☎️电话（临时，不要来骚扰我）",
+          "content": "13646680423"
+        },
+        {
+          "name": "Luogu洛谷",
+          "content": "yanzie\n主页：<https://www.luogu.com.cn/user/1647088>"
         }
       ]
     },
@@ -38,7 +42,10 @@
       "primary": "#39d0ff",
       "accent": "#7c5cff"
     },
-    "favicon": ""
+    "favicon": "",
+    "hero": {
+      "buttons": []
+    }
   },
   "projects": [
     {
