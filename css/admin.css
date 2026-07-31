@@ -66,6 +66,8 @@ tr:hover td { background: #fafbfc; }
 
 .row2 { display: flex; gap: 14px; flex-wrap: wrap; }
 .row2 > div { flex: 1; min-width: 200px; }
+.row4 { display: grid; grid-template-columns: 1.2fr 1.6fr 0.9fr 0.7fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+.row4 input, .row4 select { margin-bottom: 0; }
 .cover-preview { max-width: 100%; max-height: 160px; border-radius: 10px; margin-top: 6px; border: 1px solid #e6e8eb; }
 .status-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
 .tag-input-hint { font-size: 12px; color: #8a93a0; }
@@ -81,4 +83,5 @@ tr:hover td { background: #fafbfc; }
   .sidebar nav { display: flex; flex-wrap: wrap; }
   .admin-main { margin-left: 0; padding: 18px; }
   .side-foot { width: 100%; }
+  .row4 { grid-template-columns: 1fr; }
 }
