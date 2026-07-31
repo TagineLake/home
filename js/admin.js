@@ -114,6 +114,12 @@
           <div><label>主按钮文字</label><input id="s_b1" value="${esc(s.heroBtn1 || '')}" /></div>
           <div><label>次按钮文字</label><input id="s_b2" value="${esc(s.heroBtn2 || '')}" /></div>
         </div>
+        <div class="panel" style="margin-top:14px;background:rgba(124,92,255,.06);border:1px solid rgba(124,92,255,.18)">
+          <h3>首页自定义按钮</h3>
+          <p class="desc">如果下方添加了按钮，首页将优先显示这些按钮；留空则使用上面的「主/次按钮」。</p>
+          <div id="heroBtns"></div>
+          <button class="btn small" id="addHeroBtn" type="button">+ 添加按钮</button>
+        </div>
         <div class="row2">
           <div><label>邮箱</label><input id="c_email" value="${esc(s.contact.email || '')}" /></div>
           <div><label>GitHub</label><input id="c_github" value="${esc(s.contact.github || '')}" /></div>
@@ -121,6 +127,12 @@
         <div class="row2">
           <div><label>微信</label><input id="c_wechat" value="${esc(s.contact.wechat || '')}" /></div>
           <div><label>其他</label><input id="c_other" value="${esc(s.contact.other || '')}" /></div>
+        </div>
+        <div class="panel" style="margin-top:14px;background:rgba(57,208,255,.06);border:1px solid rgba(57,208,255,.18)">
+          <h3>联系方式自定义卡片</h3>
+          <p class="desc">在联系方式页面额外显示卡片，内容支持 Markdown（可放二维码说明、社交链接等）。</p>
+          <div id="contactCards"></div>
+          <button class="btn small" id="addContactCard" type="button">+ 添加卡片</button>
         </div>
         <label>主题色（主）</label><input id="t_primary" value="${esc(s.theme.primary || '#39d0ff')}" />
         <label>主题色（辅）</label><input id="t_accent" value="${esc(s.theme.accent || '#7c5cff')}" />
@@ -133,10 +145,63 @@
       </div>`;
     $('#s_about').oninput = () => { $('#aboutPrev').innerHTML = md($('#s_about').value); };
     $('#f_fav').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { fav = rd.result; $('#f_prev').outerHTML = `<img class="cover-preview" id="f_prev" src="${esc(fav)}" />`; }; rd.readAsDataURL(f); };
+
+    // 首页自定义按钮编辑器
+    s.hero = s.hero || {};
+    let heroButtons = (s.hero.buttons || []).slice();
+    function renderHeroButtons() {
+      const wrap = $('#heroBtns');
+      wrap.innerHTML = heroButtons.map((b, i) => `
+        <div class="row4 hero-btn-row" data-idx="${i}">
+          <div><input class="hb-label" placeholder="按钮文字" value="${esc(b.label || '')}" /></div>
+          <div><input class="hb-link" placeholder="链接，如 #/projects 或 https://..." value="${esc(b.link || '')}" /></div>
+          <div>
+            <select class="hb-style">
+              <option value="primary" ${b.style !== 'ghost' ? 'selected' : ''}>主按钮</option>
+              <option value="ghost" ${b.style === 'ghost' ? 'selected' : ''}>次按钮</option>
+            </select>
+          </div>
+          <div><label style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input type="checkbox" class="hb-newtab" ${b.newTab ? 'checked' : ''} />新窗口</label></div>
+          <div><button class="btn small danger hb-del" type="button">删除</button></div>
+        </div>`).join('');
+      wrap.querySelectorAll('.hb-del').forEach(btn => btn.onclick = () => { heroButtons.splice(Number(btn.closest('.hero-btn-row').dataset.idx), 1); renderHeroButtons(); });
+    }
+    renderHeroButtons();
+    $('#addHeroBtn').onclick = () => { heroButtons.push({ label: '', link: '', style: 'primary', newTab: false }); renderHeroButtons(); };
+
+    // 联系方式自定义卡片编辑器
+    s.contact.cards = s.contact.cards || [];
+    let contactCards = s.contact.cards.slice();
+    function renderContactCards() {
+      const wrap = $('#contactCards');
+      wrap.innerHTML = contactCards.map((c, i) => `
+        <div class="contact-card-row" data-idx="${i}" style="margin-bottom:12px">
+          <div class="row2">
+            <div><input class="cc-name" placeholder="卡片名称，如 微信" value="${esc(c.name || '')}" /></div>
+            <div style="text-align:right"><button class="btn small danger cc-del" type="button">删除</button></div>
+          </div>
+          <textarea class="cc-content" placeholder="卡片内容，支持 Markdown" style="min-height:70px">${esc(c.content || '')}</textarea>
+        </div>`).join('');
+      wrap.querySelectorAll('.cc-del').forEach(btn => btn.onclick = () => { contactCards.splice(Number(btn.closest('.contact-card-row').dataset.idx), 1); renderContactCards(); });
+    }
+    renderContactCards();
+    $('#addContactCard').onclick = () => { contactCards.push({ name: '', content: '' }); renderContactCards(); };
+
     $('#saveSite').onclick = async () => {
       s.name = $('#s_name').value; s.title = $('#s_title').value; s.announcement = $('#s_ann').value;
       s.heroTitle = $('#s_ht').value; s.heroSubtitle = $('#s_hs').value; s.heroBtn1 = $('#s_b1').value; s.heroBtn2 = $('#s_b2').value;
+      s.hero = s.hero || {};
+      s.hero.buttons = $('#heroBtns').querySelectorAll('.hero-btn-row').length ? Array.from($('#heroBtns').querySelectorAll('.hero-btn-row')).map(row => ({
+        label: row.querySelector('.hb-label').value.trim(),
+        link: row.querySelector('.hb-link').value.trim(),
+        style: row.querySelector('.hb-style').value,
+        newTab: row.querySelector('.hb-newtab').checked
+      })).filter(b => b.label && b.link) : [];
       s.contact = { email: $('#c_email').value, github: $('#c_github').value, wechat: $('#c_wechat').value, other: $('#c_other').value };
+      s.contact.cards = $('#contactCards').querySelectorAll('.contact-card-row').length ? Array.from($('#contactCards').querySelectorAll('.contact-card-row')).map(row => ({
+        name: row.querySelector('.cc-name').value.trim(),
+        content: row.querySelector('.cc-content').value.trim()
+      })).filter(c => c.name) : [];
       s.theme = { primary: $('#t_primary').value, accent: $('#t_accent').value };
       s.about = $('#s_about').value; s.favicon = fav;
       await save('site settings update');
@@ -247,7 +312,7 @@
         </div>`).join('');
       $('#msgList').querySelectorAll('[data-reply]').forEach(b => b.onclick = async () => { const txt = prompt('回复内容：'); if (!txt) return; try { await gh('POST', `/repos/${cfg.owner}/${cfg.repo}/issues/${b.dataset.reply}/comments`, { body: txt }); toast('已回复 ✅'); messagesTab(); } catch (e) { toast('失败：' + e.message); } });
       $('#msgList').querySelectorAll('[data-toggle]').forEach(b => b.onclick = async () => { const st = b.dataset.state === 'open' ? 'closed' : 'open'; try { await gh('PATCH', `/repos/${cfg.owner}/${cfg.repo}/issues/${b.dataset.toggle}`, { state: st }); toast('已更新 ✅'); messagesTab(); } catch (e) { toast('失败：' + e.message); } });
-    } catch (e) { $('#msgList').innerHTML = '<div class="err">加载失败：' + esc(e.message) + '</div>'; }
+    } catch (e) { tabContent.innerHTML = '<div class="panel"><div class="err">加载失败：' + esc(e.message) + '</div></div>'; }
   }
 
   async function messagesTabCloudflare() {
@@ -286,7 +351,7 @@
           toast('已更新 ✅'); messagesTab();
         } catch (e) { toast('失败：' + e.message); }
       });
-    } catch (e) { $('#msgList').innerHTML = '<div class="err">加载失败：' + esc(e.message) + '</div>'; }
+    } catch (e) { tabContent.innerHTML = '<div class="panel"><div class="err">加载失败：' + esc(e.message) + '</div></div>'; }
   }
 
   // ---------- 设置 / 云端 ----------
@@ -306,7 +371,9 @@
         </select>
         <div id="m_cf" ${m.mode === 'cloudflare' ? '' : 'hidden'}>
           <label>Worker 地址（部署后输出，形如 https://xxx.workers.dev）</label><input id="m_worker" value="${esc(m.workerUrl || '')}" placeholder="https://yanzien-guestbook.xxx.workers.dev" />
-          <label>Turnstile 站点密钥（可选，防机器人，留空则靠审核拦截）</label><input id="m_tsk" value="${esc(m.turnstileSiteKey || '')}" placeholder="0x4xxxxx" />
+          <label><input type="checkbox" id="m_ts" ${m.enableTurnstile !== false ? 'checked' : ''} style="width:auto;margin:0 6px 0 0" />开启 Turnstile 人机验证</label>
+          <label>Turnstile 站点密钥（关闭验证时可留空）</label><input id="m_tsk" value="${esc(m.turnstileSiteKey || '')}" placeholder="0x4xxxxx" />
+          <p class="muted small">如果关闭验证，请同时到 Cloudflare Worker → Settings → Variables 中删除 <b>TURNSTILE_SECRET</b>，否则留言提交会失败。</p>
         </div>
         <div id="m_ut" ${m.mode === 'cloudflare' ? 'hidden' : ''}>
           <label>Utterances 仓库（格式 owner/repo，需启用 Issues）</label><input id="m_repo" value="${esc(m.utterancesRepo || '')}" placeholder="yanzien/home" />
@@ -330,6 +397,7 @@
     $('#m_save').onclick = async () => {
       m.mode = $('#m_mode').value;
       m.workerUrl = $('#m_worker').value.trim();
+      m.enableTurnstile = $('#m_ts').checked;
       m.turnstileSiteKey = $('#m_tsk').value.trim();
       m.utterancesRepo = $('#m_repo').value.trim();
       m.formEndpoint = $('#m_endpoint').value.trim();

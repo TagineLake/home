@@ -69,14 +69,25 @@
         <div class="feat" data-go="#/articles" data-reveal><div class="ico">📝</div><h3>文章</h3><p>关于技术、设计与思考的长文与随笔。</p></div>
         <div class="feat" data-go="#/about" data-reveal><div class="ico">💡</div><h3>关于我</h3><p>我是谁，在做什么，相信什么。</p></div>
       </div>`;
+    const heroButtons = (s.hero && s.hero.buttons && s.hero.buttons.length) ? s.hero.buttons : [
+      { label: s.heroBtn1 || '查看作品', link: '#/projects', style: 'primary' },
+      { label: s.heroBtn2 || '联系我', link: '#/contact', style: 'ghost' }
+    ];
+    const heroBtnHtml = heroButtons.map((b, i) => {
+      const label = esc(b.label || (i === 0 ? '查看作品' : '联系我'));
+      const link = esc(b.link || '#/');
+      const cls = b.style === 'ghost' ? 'btn btn-ghost' : 'btn btn-primary';
+      const isExternal = link.startsWith('http') || link.startsWith('//');
+      if (isExternal || b.newTab) return `<a class="${cls}" href="${link}" target="_blank" rel="noopener">${label}</a>`;
+      return `<a class="${cls}" href="${link}">${label}</a>`;
+    }).join('');
     app.innerHTML = `
       <section class="hero">
         <span class="badge">✦ 个人官网 · 持续更新中</span>
         <h1>${esc(s.heroTitle || s.name || 'yanzien')}</h1>
         <p class="sub">${esc(s.heroSubtitle || '')}</p>
         <div class="cta">
-          <a class="btn btn-primary" href="#/projects">${esc(s.heroBtn1 || '查看作品')}</a>
-          <a class="btn btn-ghost" href="#/contact">${esc(s.heroBtn2 || '联系我')}</a>
+          ${heroBtnHtml}
         </div>
         <div class="scroll-ind">向下滚动 ↓</div>
       </section>
@@ -180,6 +191,9 @@
     if (c.github) items.push(['🐙 GitHub', `<a href="${esc(c.github)}" target="_blank" rel="noopener">${esc(c.github)}</a>`]);
     if (c.wechat) items.push(['💬 微信', esc(c.wechat)]);
     if (c.other) items.push(['🔗 其他', esc(c.other)]);
+    (c.cards || []).forEach(card => {
+      items.push([esc(card.name || ''), md(card.content || '')]);
+    });
     app.innerHTML = `<section class="section"><div class="section-head" data-reveal><h2><span class="bar"></span>联系方式</h2><p>欢迎通过以下方式与我联系</p></div>
       <div class="contact-grid">${items.map(([l, v]) => `<div class="contact-item" data-reveal><div class="label">${l}</div><div class="value">${v}</div></div>`).join('') || '<div class="empty">暂无联系方式</div>'}</div></section>`;
     observeReveal();
@@ -244,7 +258,8 @@
       </div>`;
 
     // 可选 Turnstile 验证码
-    if (cfg.turnstileSiteKey) {
+    const enableTs = cfg.enableTurnstile !== false;
+    if (enableTs && cfg.turnstileSiteKey) {
       const wrap = document.getElementById('gbTurn');
       wrap.innerHTML = `<div class="cf-turnstile" data-sitekey="${esc(cfg.turnstileSiteKey)}" data-theme="dark"></div>`;
       if (!document.getElementById('ts-script')) {
@@ -274,8 +289,10 @@
     document.getElementById('gbForm').onsubmit = async e => {
       e.preventDefault(); const f = e.target; const msg = document.getElementById('gbMsg');
       const body = { name: f.name.value.trim(), message: f.message.value.trim() };
-      const tEl = document.querySelector('.cf-turnstile');
-      if (tEl && tEl.querySelector('input[name="cf-turnstile-response"]')) body.turnstileToken = tEl.querySelector('input[name="cf-turnstile-response"]').value;
+      if (enableTs) {
+        const tEl = document.querySelector('.cf-turnstile');
+        if (tEl && tEl.querySelector('input[name="cf-turnstile-response"]')) body.turnstileToken = tEl.querySelector('input[name="cf-turnstile-response"]').value;
+      }
       msg.textContent = '提交中…';
       try {
         const r = await fetch(api + '/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
