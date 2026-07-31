@@ -86,7 +86,7 @@
   "messagesConfig": {
     "mode": "cloudflare",
     "workerUrl": "https://yanzien-guestbook.yanzien2013.workers.dev/",
-    "enableTurnstile": true,
+    "enableTurnstile": false,
     "turnstileSiteKey": "0x4AAAAAAAEA6JYcA648qiIre",
     "utterancesRepo": "",
     "formEndpoint": ""
