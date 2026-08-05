@@ -67,12 +67,9 @@
     },
     {
       "id": "p2",
-      "title": "Echo 即时通讯组件库（示例）",
+      "title": "OI信奥工作台",
       "cover": "",
-      "tags": [
-        "通信",
-        "组件库"
-      ],
+      "tags": [],
       "status": "done",
       "summary": "一套开箱即用的聊天 UI 组件，已被多个项目采用。",
       "content": "（非真实）\n# Echo 即时通讯组件库\n\n提供会话、消息气泡、输入态等完整组件。\n\n```ts\nimport { Chat } from 'echo-ui';\n```\n\n已开源并收获不错的 star。",
