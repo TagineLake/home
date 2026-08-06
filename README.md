@@ -1,5 +1,7 @@
 # yanzien 的官网（静态版 · 适配 GitHub Pages）
 
+注：此版本转为客户Tagine设计
+
 一个**纯静态、零后端**的个人官网，专为部署到 GitHub Pages（`yanzien.github.io/home`）设计。
 所有内容以单个 `data/content.json` 形式存放在仓库里，**后台直接通过 GitHub API 把修改提交回仓库**——也就是「云端存储」，你不需要开着电脑。
 
