@@ -6,44 +6,164 @@
     "gameSubtitle": "- The Game of Life -",
     "favicon": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23E52521'/><text x='8' y='12' font-size='10' text-anchor='middle' fill='white'>T</text></svg>",
     "announcement": "欢迎来到 TagineLake 的世界！",
-    "about": "这里是 TagineLake 的个人网站，用马里奥游戏的方式展示我的人生。",
+    "about": "这里是 TagineLake 的个人网站，用马里奥游戏的方式展示我的人生。test",
     "consoleEgg": "嘿 被你发现了开发者模式! 送你一句：别看了。",
     "defaultTheme": "classic-mario",
     "themes": {
-      "classic-mario": { "name": "经典马里奥", "bg": "#5C94FC", "text": "#ffffff", "accent": "#E52521", "ground": "#D07510", "pipe": "#43B047", "cloud": "#ffffff" },
-      "autistic":     { "name": "我很自闭",   "bg": "#1a1a2e", "text": "#888888", "accent": "#444444", "ground": "#333333", "pipe": "#555555", "cloud": "#666666" },
-      "cheerful":     { "name": "我很开朗",   "bg": "#FFF8E7", "text": "#5D4037", "accent": "#FF9800", "ground": "#D7B37E", "pipe": "#8D6E63", "cloud": "#FFECB3" },
-      "happy":        { "name": "我很开心",   "bg": "#FFEBEE", "text": "#C62828", "accent": "#E91E63", "ground": "#FFB74D", "pipe": "#EC407A", "cloud": "#FFCDD2" }
+      "classic-mario": {
+        "name": "经典马里奥",
+        "bg": "#5C94FC",
+        "text": "#ffffff",
+        "accent": "#E52521",
+        "ground": "#D07510",
+        "pipe": "#43B047",
+        "cloud": "#ffffff"
+      },
+      "autistic": {
+        "name": "我很自闭",
+        "bg": "#1a1a2e",
+        "text": "#888888",
+        "accent": "#444444",
+        "ground": "#333333",
+        "pipe": "#555555",
+        "cloud": "#666666"
+      },
+      "cheerful": {
+        "name": "我很开朗",
+        "bg": "#FFF8E7",
+        "text": "#5D4037",
+        "accent": "#FF9800",
+        "ground": "#D7B37E",
+        "pipe": "#8D6E63",
+        "cloud": "#FFECB3"
+      },
+      "happy": {
+        "name": "我很开心",
+        "bg": "#FFEBEE",
+        "text": "#C62828",
+        "accent": "#E91E63",
+        "ground": "#FFB74D",
+        "pipe": "#EC407A",
+        "cloud": "#FFCDD2"
+      }
     },
     "bgm": {
-      "menu":   "assets/sounds/bgm-menu.mp3",
+      "menu": "assets/sounds/bgm-menu.mp3",
       "simple": "assets/sounds/bgm-simple.mp3",
-      "hard":   "assets/sounds/bgm-hard.mp3"
+      "hard": "assets/sounds/bgm-hard.mp3"
     },
     "simpleModeIntro": "简单模式：在这里轻松浏览人生成就、生活动态和生活圈子。每段进度条 30 秒自动前进，点击下方管道可立即跳转。",
     "hardModeIntro": "困难模式：这里展示个人荣誉、作品和能力。挑战更高难度，了解更多关于我的故事。",
     "contacts": [
-      { "label": "微信", "value": "TagineLake", "type": "text" },
-      { "label": "QQ", "value": "10001", "type": "text" },
-      { "label": "邮箱", "value": "hello@example.com", "type": "email" },
-      { "label": "抖音", "value": "https://www.douyin.com/", "type": "link" },
-      { "label": "B站", "value": "https://space.bilibili.com/", "type": "link" }
+      {
+        "label": "微信",
+        "value": "TagineLake",
+        "type": "text"
+      },
+      {
+        "label": "QQ",
+        "value": "10001",
+        "type": "text"
+      },
+      {
+        "label": "邮箱",
+        "value": "hello@example.com",
+        "type": "email"
+      },
+      {
+        "label": "抖音",
+        "value": "https://www.douyin.com/",
+        "type": "link"
+      },
+      {
+        "label": "B站",
+        "value": "https://space.bilibili.com/",
+        "type": "link"
+      }
     ]
   },
-
   "achievements": [
-    { "id": "a1", "title": "启程", "desc": "第一次意识到**人生是一场横版过关游戏**，从此按下 START。", "icon": "flag", "date": "2008", "rarity": "common", "hidden": false },
-    { "id": "a2", "title": "第一枚金币", "desc": "拿到人生中第一笔靠自己赚来的钱。", "icon": "coin", "date": "2016", "rarity": "common", "hidden": false },
-    { "id": "a3", "title": "隐藏关卡", "desc": "在一个谁都没注意的角落，钻进了改变命运的管道。", "icon": "mushroom", "date": "2019", "rarity": "rare", "hidden": false },
-    { "id": "a4", "title": "打通城堡", "desc": "完成了一件曾经觉得不可能完成的事。", "icon": "trophy", "date": "2022", "rarity": "epic", "hidden": false },
-    { "id": "a5", "title": "无尽模式", "desc": "开始相信：*通关不是终点，跑下去才是。*", "icon": "run", "date": "至今", "rarity": "legendary", "hidden": false },
-    { "id": "h1", "title": "？？？？？", "desc": "？？？？？", "icon": "lock", "hidden": true },
-    { "id": "h2", "title": "？？？？？", "desc": "？？？？？", "icon": "lock", "hidden": true },
-    { "id": "h3", "title": "？？？？？", "desc": "？？？？？", "icon": "lock", "hidden": true },
-    { "id": "h4", "title": "？？？？？", "desc": "？？？？？", "icon": "lock", "hidden": true },
-    { "id": "h5", "title": "？？？？？", "desc": "？？？？？", "icon": "lock", "hidden": true }
+    {
+      "id": "a1",
+      "title": "启程",
+      "desc": "第一次意识到**人生是一场横版过关游戏**，从此按下 START。",
+      "icon": "flag",
+      "date": "2008",
+      "rarity": "common",
+      "hidden": false
+    },
+    {
+      "id": "a2",
+      "title": "第一枚金币",
+      "desc": "拿到人生中第一笔靠自己赚来的钱。",
+      "icon": "coin",
+      "date": "2016",
+      "rarity": "common",
+      "hidden": false
+    },
+    {
+      "id": "a3",
+      "title": "隐藏关卡",
+      "desc": "在一个谁都没注意的角落，钻进了改变命运的管道。",
+      "icon": "mushroom",
+      "date": "2019",
+      "rarity": "rare",
+      "hidden": false
+    },
+    {
+      "id": "a4",
+      "title": "打通城堡",
+      "desc": "完成了一件曾经觉得不可能完成的事。",
+      "icon": "trophy",
+      "date": "2022",
+      "rarity": "epic",
+      "hidden": false
+    },
+    {
+      "id": "a5",
+      "title": "无尽模式",
+      "desc": "开始相信：*通关不是终点，跑下去才是。*",
+      "icon": "run",
+      "date": "至今",
+      "rarity": "legendary",
+      "hidden": false
+    },
+    {
+      "id": "h1",
+      "title": "？？？？？",
+      "desc": "？？？？？",
+      "icon": "lock",
+      "hidden": true
+    },
+    {
+      "id": "h2",
+      "title": "？？？？？",
+      "desc": "？？？？？",
+      "icon": "lock",
+      "hidden": true
+    },
+    {
+      "id": "h3",
+      "title": "？？？？？",
+      "desc": "？？？？？",
+      "icon": "lock",
+      "hidden": true
+    },
+    {
+      "id": "h4",
+      "title": "？？？？？",
+      "desc": "？？？？？",
+      "icon": "lock",
+      "hidden": true
+    },
+    {
+      "id": "h5",
+      "title": "？？？？？",
+      "desc": "？？？？？",
+      "icon": "lock",
+      "hidden": true
+    }
   ],
-
   "feed": [
     {
       "id": "f1",
@@ -51,7 +171,10 @@
       "date": "2026-08-06",
       "mood": "🍄",
       "content": "把网站重做了一版，信息栏里跑起了一个小马里奥。\n\n> 地形是随机生成的，遇到问号砖一定去顶。",
-      "tags": ["建站", "日常"],
+      "tags": [
+        "建站",
+        "日常"
+      ],
       "images": [],
       "likes": 12,
       "comments": 3,
@@ -63,39 +186,94 @@
       "date": "2026-07-20",
       "mood": "⭐",
       "content": "最近想明白一件事：**跑得快不如跑得久**。\n\n- 每天写一点\n- 每周复盘一次\n- 别停",
-      "tags": ["随笔"],
+      "tags": [
+        "随笔"
+      ],
       "images": [],
       "likes": 8,
       "comments": 1,
       "link": ""
     }
   ],
-
   "circles": {
-    "games":  [
-      { "name": "超级马里奥兄弟", "rating": 5, "comment": "一切的起点。", "cover": "" },
-      { "name": "塞尔达传说：旷野之息", "rating": 5, "comment": "翻过那座山看看。", "cover": "" },
-      { "name": "空洞骑士", "rating": 4, "comment": "苦，但值得。", "cover": "" }
+    "games": [
+      {
+        "name": "超级马里奥兄弟",
+        "rating": 5,
+        "comment": "一切的起点。",
+        "cover": ""
+      },
+      {
+        "name": "塞尔达传说：旷野之息",
+        "rating": 5,
+        "comment": "翻过那座山看看。",
+        "cover": ""
+      },
+      {
+        "name": "空洞骑士",
+        "rating": 4,
+        "comment": "苦，但值得。",
+        "cover": ""
+      }
     ],
     "novels": [
-      { "name": "三体", "rating": 5, "comment": "宇宙很大，生活更大。", "cover": "" },
-      { "name": "活着", "rating": 5, "comment": "看完沉默了很久。", "cover": "" }
+      {
+        "name": "三体",
+        "rating": 5,
+        "comment": "宇宙很大，生活更大。",
+        "cover": ""
+      },
+      {
+        "name": "活着",
+        "rating": 5,
+        "comment": "看完沉默了很久。",
+        "cover": ""
+      }
     ],
     "animes": [
-      { "name": "钢之炼金术师 FA", "rating": 5, "comment": "等价交换。", "cover": "" },
-      { "name": "夏日重现", "rating": 4, "comment": "轮回的夏天。", "cover": "" }
+      {
+        "name": "钢之炼金术师 FA",
+        "rating": 5,
+        "comment": "等价交换。",
+        "cover": ""
+      },
+      {
+        "name": "夏日重现",
+        "rating": 4,
+        "comment": "轮回的夏天。",
+        "cover": ""
+      }
     ],
     "music": [
-      { "name": "久石让 - Summer", "rating": 5, "comment": "夏天的BGM。", "cover": "" }
+      {
+        "name": "久石让 - Summer",
+        "rating": 5,
+        "comment": "夏天的BGM。",
+        "cover": ""
+      }
     ],
     "movies": []
   },
-
   "honors": [
-    { "id": "n1", "year": "2024", "title": "示例荣誉名称", "org": "示例颁发机构", "level": "省级", "desc": "在这里写获奖说明，支持 **Markdown**。", "cert": "" },
-    { "id": "n2", "year": "2022", "title": "示例奖学金", "org": "示例学校", "level": "校级", "desc": "", "cert": "" }
+    {
+      "id": "n1",
+      "year": "2024",
+      "title": "示例荣誉名称",
+      "org": "示例颁发机构",
+      "level": "省级",
+      "desc": "在这里写获奖说明，支持 **Markdown**。",
+      "cert": ""
+    },
+    {
+      "id": "n2",
+      "year": "2022",
+      "title": "示例奖学金",
+      "org": "示例学校",
+      "level": "校级",
+      "desc": "",
+      "cert": ""
+    }
   ],
-
   "works": [
     {
       "id": "w1",
@@ -103,7 +281,12 @@
       "type": "网站",
       "status": "doing",
       "desc": "马里奥风格的横版过关式个人主页，信息栏内含**实时跑酷引擎**。",
-      "tech": ["HTML", "CSS", "Canvas", "Cloudflare"],
+      "tech": [
+        "HTML",
+        "CSS",
+        "Canvas",
+        "Cloudflare"
+      ],
       "cover": "",
       "link": ""
     },
@@ -113,23 +296,55 @@
       "type": "工具",
       "status": "done",
       "desc": "在后台可以随时增删改这里的作品。",
-      "tech": ["JavaScript"],
+      "tech": [
+        "JavaScript"
+      ],
       "cover": "",
       "link": ""
     }
   ],
-
   "abilities": [
-    { "name": "HTML / CSS", "level": 4, "category": "前端" },
-    { "name": "JavaScript", "level": 3, "category": "前端" },
-    { "name": "Canvas 动画", "level": 3, "category": "前端" },
-    { "name": "Node.js", "level": 2, "category": "后端" },
-    { "name": "Cloudflare Workers", "level": 2, "category": "后端" },
-    { "name": "Photoshop", "level": 3, "category": "设计" },
-    { "name": "像素画", "level": 2, "category": "设计" },
-    { "name": "剪辑", "level": 1, "category": "其他" }
+    {
+      "name": "HTML / CSS",
+      "level": 4,
+      "category": "前端"
+    },
+    {
+      "name": "JavaScript",
+      "level": 3,
+      "category": "前端"
+    },
+    {
+      "name": "Canvas 动画",
+      "level": 3,
+      "category": "前端"
+    },
+    {
+      "name": "Node.js",
+      "level": 2,
+      "category": "后端"
+    },
+    {
+      "name": "Cloudflare Workers",
+      "level": 2,
+      "category": "后端"
+    },
+    {
+      "name": "Photoshop",
+      "level": 3,
+      "category": "设计"
+    },
+    {
+      "name": "像素画",
+      "level": 2,
+      "category": "设计"
+    },
+    {
+      "name": "剪辑",
+      "level": 1,
+      "category": "其他"
+    }
   ],
-
   "themes": [
     {
       "key": "classic",
