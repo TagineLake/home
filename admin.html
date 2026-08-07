@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TagineLake 后台管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">TagineLake</div>
+    <h1>内容管理控制台</h1>
+    <p class="login-hint">用 GitHub 仓库信息登录，内容将直接提交到仓库</p>
+    <label class="lf"><span>GitHub 用户名</span><input type="text" id="login-owner" placeholder="TagineLake" autocomplete="username"></label>
+    <label class="lf"><span>仓库名</span><input type="text" id="login-repo" placeholder="home"></label>
+    <label class="lf"><span>分支</span><input type="text" id="login-branch" placeholder="main" value="main"></label>
+    <label class="lf"><span>Personal Access Token</span><input type="password" id="login-token" placeholder="ghp_xxx" autocomplete="current-password"></label>
+    <label class="lf"><span>评论管理 Token（可选）</span><input type="password" id="login-admin-token" placeholder="Cloudflare ADMIN_TOKEN"></label>
+    <button id="login-btn" class="btn btn-primary btn-block">登录</button>
+    <p id="login-error" class="error" hidden></p>
+    <p class="login-foot">Token 只保存在本机浏览器 localStorage，不会上传</p>
+  </div>
+</div>
+
+<!-- ==================== ADMIN PANEL ==================== -->
+<div id="admin-panel" class="admin-panel" hidden>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-mark">TL</span>
+      <span class="brand-name">TagineLake 后台</span>
+      <span id="repo-label" class="repo-label"></span>
+    </div>
+    <div class="top-actions">
+      <span id="dirty-flag" class="dirty-flag" hidden>● 有未保存改动</span>
+      <a href="index.html" target="_blank" rel="noopener" class="btn btn-ghost">预览前台</a>
+      <button id="btn-reload" class="btn btn-ghost">重新拉取</button>
+      <button id="btn-save" class="btn btn-primary">保存到 GitHub</button>
+      <button id="btn-logout" class="btn btn-danger">退出</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <nav class="side-nav" id="side-nav">
+      <button class="nav-btn active" data-tab="site"><i>⚙</i>站点设置</button>
+      <button class="nav-btn" data-tab="achievements"><i>🏆</i>人生成就<em id="cnt-achievements">0</em></button>
+      <button class="nav-btn" data-tab="feed"><i>📝</i>生活动态<em id="cnt-feed">0</em></button>
+      <button class="nav-btn" data-tab="circles"><i>🎮</i>生活圈子<em id="cnt-circles">0</em></button>
+      <button class="nav-btn" data-tab="honors"><i>🎖</i>个人荣誉<em id="cnt-honors">0</em></button>
+      <button class="nav-btn" data-tab="works"><i>💼</i>个人作品<em id="cnt-works">0</em></button>
+      <button class="nav-btn" data-tab="abilities"><i>☀</i>个人能力<em id="cnt-abilities">0</em></button>
+      <button class="nav-btn" data-tab="comments"><i>💬</i>评论管理</button>
+      <button class="nav-btn" data-tab="json"><i>{ }</i>数据源</button>
+    </nav>
+
+    <!-- Content -->
+    <main class="tab-wrap">
+
+      <!-- Tab: Site Settings -->
+      <section class="tab-content active" id="tab-site">
+        <h2 class="sec-title">基础信息</h2>
+        <div class="grid2">
+          <label class="ff"><span>站点名称</span><input type="text" id="set-name"></label>
+          <label class="ff"><span>页面标题</span><input type="text" id="set-title"></label>
+          <label class="ff"><span>游戏大标题</span><input type="text" id="set-gameTitle"></label>
+          <label class="ff"><span>游戏副标题</span><input type="text" id="set-gameSubtitle"></label>
+        </div>
+        <label class="ff"><span>公告</span><textarea id="set-announcement" rows="2"></textarea></label>
+        <label class="ff"><span>关于</span><textarea id="set-about" rows="3"></textarea></label>
+        <div class="grid2">
+          <label class="ff"><span>控制台彩蛋</span><input type="text" id="set-consoleEgg"></label>
+          <label class="ff"><span>默认主题</span>
+            <select id="set-defaultTheme">
+              <option value="classic-mario">经典马里奥</option>
+              <option value="autistic">我很自闭</option>
+              <option value="cheerful">我很开朗</option>
+              <option value="happy">我很开心</option>
+            </select>
+          </label>
+        </div>
+        <label class="ff"><span>简单模式说明</span><textarea id="set-simpleModeIntro" rows="2"></textarea></label>
+        <label class="ff"><span>困难模式说明</span><textarea id="set-hardModeIntro" rows="2"></textarea></label>
+        <label class="ff"><span>Favicon（URL 或 data:）</span><input type="text" id="set-favicon"></label>
+
+        <h2 class="sec-title">联系方式</h2>
+        <div id="contacts-editor" class="card-list"></div>
+        <button class="btn btn-add" id="add-contact">+ 添加联系方式</button>
+
+        <h2 class="sec-title">背景音乐</h2>
+        <div class="grid3">
+          <label class="ff"><span>菜单 BGM</span><input type="text" id="set-bgm-menu" placeholder="assets/sounds/bgm-menu.mp3"></label>
+          <label class="ff"><span>简单模式 BGM</span><input type="text" id="set-bgm-simple"></label>
+          <label class="ff"><span>困难模式 BGM</span><input type="text" id="set-bgm-hard"></label>
+        </div>
+
+        <h2 class="sec-title">主题配色</h2>
+        <div id="themes-editor" class="theme-editor"></div>
+
+        <h2 class="sec-title">评论系统</h2>
+        <div class="grid2">
+          <label class="ff"><span>Worker / Functions URL</span><input type="text" id="set-workerUrl" placeholder="留空则用同源 /api"></label>
+          <label class="ff"><span>站点标记 site</span><input type="text" id="set-site-tag" placeholder="tagine-lake"></label>
+          <label class="ff"><span>GitHub 兜底仓库</span><input type="text" id="set-github-repo" placeholder="owner/repo"></label>
+          <label class="ff ff-check"><input type="checkbox" id="set-github-enabled"><span>Cloudflare 不可达时启用 GitHub Issues 兜底</span></label>
+        </div>
+      </section>
+
+      <!-- Tab: Achievements -->
+      <section class="tab-content" id="tab-achievements" hidden>
+        <h2 class="sec-title">人生成就<small>支持 Markdown · 隐藏栏在前台显示为 ？？？？？</small></h2>
+        <div id="achievements-editor" class="card-list"></div>
+        <div class="add-row">
+          <button class="btn btn-add" data-add="achievements">+ 添加成就</button>
+          <button class="btn btn-add" id="add-hidden-ach">+ 添加隐藏栏</button>
+        </div>
+      </section>
+
+      <!-- Tab: Feed -->
+      <section class="tab-content" id="tab-feed" hidden>
+        <h2 class="sec-title">生活动态<small>B 站风格卡片流 · 正文支持 Markdown</small></h2>
+        <div id="feed-editor" class="card-list"></div>
+        <button class="btn btn-add" data-add="feed">+ 添加动态</button>
+      </section>
+
+      <!-- Tab: Circles -->
+      <section class="tab-content" id="tab-circles" hidden>
+        <h2 class="sec-title">生活圈子<small>分类收藏 · 可打分与短评</small></h2>
+        <div id="circles-editor"></div>
+      </section>
+
+      <!-- Tab: Honors -->
+      <section class="tab-content" id="tab-honors" hidden>
+        <h2 class="sec-title">个人荣誉<small>前台按年份倒序排成时间线</small></h2>
+        <div id="honors-editor" class="card-list"></div>
+        <button class="btn btn-add" data-add="honors">+ 添加荣誉</button>
+      </section>
+
+      <!-- Tab: Works -->
+      <section class="tab-content" id="tab-works" hidden>
+        <h2 class="sec-title">个人作品<small>可标注进度状态与技术栈</small></h2>
+        <div id="works-editor" class="card-list"></div>
+        <button class="btn btn-add" data-add="works">+ 添加作品</button>
+      </section>
+
+      <!-- Tab: Abilities -->
+      <section class="tab-content" id="tab-abilities" hidden>
+        <h2 class="sec-title">个人能力<small>4 级熟练度：乌云 → 阵雨 → 多云 → 晴天</small></h2>
+        <div id="abilities-editor" class="card-list"></div>
+        <button class="btn btn-add" data-add="abilities">+ 添加能力</button>
+      </section>
+
+      <!-- Tab: Comments -->
+      <section class="tab-content" id="tab-comments" hidden>
+        <h2 class="sec-title">评论管理<small>需要 Cloudflare ADMIN_TOKEN</small></h2>
+        <div class="comment-toolbar">
+          <label class="ff ff-inline"><span>Admin Token</span><input type="password" id="admin-token-input" placeholder="X-Admin-Token"></label>
+          <button class="btn btn-ghost" id="btn-save-token">记住</button>
+          <button class="btn btn-ghost" id="btn-reload-comments">刷新列表</button>
+          <select id="comment-filter" class="filter-select">
+            <option value="all">全部</option>
+            <option value="visible">仅显示中</option>
+            <option value="hidden">仅已隐藏</option>
+          </select>
+        </div>
+        <div id="comments-admin-list" class="card-list">
+          <p class="hint-text">点击「刷新列表」加载评论</p>
+        </div>
+      </section>
+
+      <!-- Tab: JSON -->
+      <section class="tab-content" id="tab-json" hidden>
+        <h2 class="sec-title">数据源 content.json<small>可直接编辑 / 导入 / 导出</small></h2>
+        <div class="add-row">
+          <button class="btn btn-ghost" id="btn-json-refresh">从表单刷新</button>
+          <button class="btn btn-ghost" id="btn-json-copy">复制</button>
+          <button class="btn btn-ghost" id="btn-json-download">下载备份</button>
+          <button class="btn btn-primary" id="btn-json-apply">应用到表单</button>
+        </div>
+        <textarea id="json-area" class="json-area" spellcheck="false"></textarea>
+        <p id="json-status" class="hint-text"></p>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

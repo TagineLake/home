@@ -1,0 +1,605 @@
+/* ============================================
+   TagineLake - Mario Style Personal Site
+   css/style.css
+   ============================================ */
+
+/* ---------- Reset & Base ---------- */
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #5C94FC;
+  --text: #ffffff;
+  --accent: #E52521;
+  --ground: #D07510;
+  --ground-deep: #8B4A08;  /* darker brown for progress bar base */
+  --pipe: #43B047;
+  --cloud: #ffffff;
+  --panel-bg: rgba(0,0,0,0.65);
+  --shadow: 4px 4px 0 rgba(0,0,0,0.4);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+[hidden] { display: none !important; }
+
+/* ---------- Loading Screen ---------- */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #5C94FC;
+}
+#mini-game-canvas {
+  image-rendering: pixelated;
+  background: #5C94FC;
+  border: 4px solid #D07510;
+  max-width: 90vw;
+}
+.loading-hint {
+  margin-top: 16px; font-size: 10px; color: #fff;
+  text-shadow: 2px 2px 0 #000;
+}
+.loading-bar {
+  width: 300px; height: 20px; margin-top: 20px;
+  border: 3px solid #000; background: #333;
+}
+.loading-bar-fill {
+  height: 100%; width: 0%; background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* ---------- Screens ---------- */
+.screen {
+  display: none;
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+}
+.screen.active { display: block; }
+.mode-screen {
+  padding-bottom: 100px;  /* leave room for progress bar + taskbar */
+  background: var(--bg);
+  overflow-y: auto; overflow-x: hidden;
+}
+/* Sky + ground layers for simple/hard screens (parallax backdrop) */
+.mode-screen::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 88px;  /* stop above progress bar */
+  background: var(--bg);
+  z-index: 0;
+  pointer-events: none;
+}
+.mode-screen::after {
+  content: '';
+  position: fixed; bottom: 88px; left: 0; right: 0; height: 40px;  /* sit on top of progress bar */
+  background: var(--ground);
+  border-top: 4px solid #000;
+  box-shadow: inset 0 -8px 0 rgba(0,0,0,0.15);
+  z-index: 2;
+  pointer-events: none;
+  /* Tile pattern for ground bricks */
+  background-image:
+    linear-gradient(90deg, transparent 0 60px, rgba(0,0,0,0.18) 60px 62px),
+    linear-gradient(180deg, rgba(255,255,255,0.08) 0 6px, transparent 6px);
+  background-size: 124px 100%, 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+}
+.mode-screen .info-panel { position: absolute; z-index: 3; }
+.mode-screen .panel-title { position: relative; z-index: 3; }
+.mode-screen .mode-cloud {
+  position: absolute; width: 80px; height: 30px;
+  background: var(--cloud); border-radius: 50px;
+  box-shadow:
+    20px -15px 0 var(--cloud), 40px 0 0 var(--cloud),
+    60px -10px 0 var(--cloud);
+  animation: cloudMove linear infinite;
+  pointer-events: none; z-index: 1;
+}
+
+/* ---------- Sky / Clouds / Ground ---------- */
+.sky-layer {
+  position: absolute; top: 0; left: 0; right: 0; height: 70%;
+  background: var(--bg);
+  z-index: 0;
+}
+.cloud-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.cloud {
+  position: absolute; width: 80px; height: 30px;
+  background: var(--cloud); border-radius: 50px;
+  animation: cloudMove linear infinite;
+  box-shadow:
+    20px -15px 0 var(--cloud), 40px 0 0 var(--cloud),
+    60px -10px 0 var(--cloud);
+}
+@keyframes cloudMove { from { transform: translateX(-200px); } to { transform: translateX(100vw); } }
+
+.mountain-layer {
+  position: absolute; bottom: 30%; left: 0; right: 0; height: 120px;
+  z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(135deg, transparent 49%, var(--ground) 50%) 0 0 / 200px 120px,
+    linear-gradient(225deg, transparent 49%, var(--ground) 50%) 0 0 / 200px 120px;
+  opacity: 0.5;
+}
+.ground-layer {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 30%;
+  background: var(--ground);
+  z-index: 0;
+  border-top: 8px solid #000;
+}
+.ground-layer::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 16px;
+  background: repeating-linear-gradient(90deg, transparent 0 30px, rgba(0,0,0,0.15) 30px 60px);
+}
+
+/* ---------- Start Screen ---------- */
+.start-content {
+  position: relative; z-index: 2;
+  min-height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.game-title {
+  font-size: clamp(24px, 5vw, 48px);
+  color: var(--accent);
+  text-shadow: 4px 4px 0 #000, -2px -2px 0 #fff;
+  letter-spacing: 2px;
+  animation: titleBounce 2s ease-in-out infinite;
+}
+@keyframes titleBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.game-subtitle {
+  font-size: clamp(10px, 2vw, 16px); margin-top: 12px;
+  color: #fff; text-shadow: 2px 2px 0 #000;
+}
+.announcement {
+  margin: 24px 0; font-size: 10px; color: #fff;
+  text-shadow: 2px 2px 0 #000; text-align: center; max-width: 600px;
+  line-height: 1.8;
+}
+
+/* ---------- Mario Buttons ---------- */
+.mario-btn {
+  font-family: inherit; font-size: 12px;
+  background: var(--accent); color: #fff;
+  border: 3px solid #000; border-radius: 0;
+  padding: 14px 28px; margin: 8px;
+  cursor: pointer; text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+  box-shadow: var(--shadow);
+  transition: transform 0.08s, box-shadow 0.08s;
+  image-rendering: pixelated;
+}
+.mario-btn:hover { filter: brightness(1.15); }
+.mario-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 transparent;
+}
+.mario-btn--green { background: var(--pipe); }
+.mario-btn--red { background: #E52521; }
+.mario-btn--big { font-size: 16px; padding: 20px 40px; display: block; width: 280px; }
+.mario-btn--small { font-size: 10px; padding: 8px 16px; }
+.start-buttons { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+
+/* ---------- Difficulty Selection ---------- */
+.difficulty-content {
+  position: relative; z-index: 2;
+  min-height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 40px 20px;
+}
+.section-title {
+  font-size: clamp(18px, 4vw, 32px); color: var(--accent);
+  text-shadow: 3px 3px 0 #000; margin-bottom: 30px;
+}
+.difficulty-buttons { display: flex; flex-direction: column; align-items: center; }
+.difficulty-desc {
+  margin: 24px; padding: 16px; max-width: 500px;
+  background: var(--panel-bg); border: 3px solid #000;
+  font-size: 10px; line-height: 1.8; color: #fff;
+}
+
+/* ---------- Info Panels (parkour stage + floating cards) ---------- */
+.run-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 1; display: block;
+  image-rendering: pixelated;
+}
+.info-panel {
+  display: none;
+  position: absolute;
+  top: 70px; left: 30px; right: 30px; bottom: 110px;  /* 留出菜单/地面/进度条 */
+  padding: 18px 22px;
+  overflow-y: auto;
+  z-index: 2;
+  border: 3px solid rgba(0,0,0,0.55);
+  border-radius: 6px;
+  background: linear-gradient(180deg,
+              rgba(0,0,0,0.62) 0%,
+              rgba(0,0,0,0.50) 60%,
+              rgba(0,0,0,0.35) 100%);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.05), 6px 6px 0 rgba(0,0,0,0.4);
+}
+.info-panel.active { display: block; }
+.panel-title {
+  font-size: clamp(16px, 3vw, 24px); color: var(--accent);
+  text-shadow: 3px 3px 0 #000; margin: 0 auto 16px;
+  text-align: center;
+  position: relative; z-index: 3;
+  max-width: 1200px;
+}
+.panel-intro {
+  font-size: 10px; line-height: 1.8; margin: 0 auto 24px;
+  text-align: center; color: #fff; text-shadow: 1px 1px 0 #000;
+  max-width: 600px;
+}
+
+/* 让内容 grid 撑满 panel 中间区域 + 内容居顶 + 不被地面挡住 */
+.achievement-grid,
+.feed-grid,
+.circles-container,
+.honor-list,
+.works-grid,
+.ability-cloud {
+  display: block;
+  width: 100%;
+  max-width: 1200px;            /* 从 900 提到 1200，大屏不再左右空旷 */
+  margin: 0 auto;
+  min-height: 100%;
+}
+/* 但 grid 类要重新启用 grid 显示 */
+.achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; align-content: center; }
+.feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-content: center; }
+.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; align-content: center; }
+.achievement-card {
+  background: var(--panel-bg); border: 3px solid var(--accent);
+  padding: 16px; text-align: center;
+  opacity: 1; transform: none;
+  transition: opacity 0.4s, transform 0.4s;
+}
+.achievement-card.unlocked {
+  opacity: 1; transform: translateY(0);
+  animation: achShake 0.5s ease 0.2s;
+}
+@keyframes achShake {
+  0%,100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-8px) rotate(-2deg); }
+  75% { transform: translateY(-4px) rotate(2deg); }
+}
+.achievement-card.hidden-ach { border-style: dashed; border-color: #666; }
+.ach-icon { font-size: 32px; margin-bottom: 8px; }
+.ach-title { font-size: 10px; color: var(--accent); margin-bottom: 8px; }
+.ach-desc { font-size: 8px; line-height: 1.6; color: #ccc; }
+
+/* ---------- Feed Grid (B站 style cards) ---------- */
+.feed-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px; max-width: 900px; margin: 0 auto;
+}
+.feed-card {
+  background: var(--panel-bg); border: 3px solid #000;
+  overflow: hidden; transition: transform 0.2s;
+}
+.feed-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.feed-card-img {
+  width: 100%; height: 120px; object-fit: cover;
+  background: #222; display: flex; align-items: center; justify-content: center;
+}
+.feed-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.feed-card-body { padding: 12px; }
+.feed-card-content { font-size: 9px; line-height: 1.6; color: #fff; margin-bottom: 8px; }
+.feed-card-meta { font-size: 8px; color: #999; display: flex; justify-content: space-between; }
+.feed-card-category {
+  display: inline-block; padding: 2px 8px; background: var(--accent);
+  font-size: 7px; color: #fff; border-radius: 0;
+}
+
+/* ---------- Circles (categorized) ---------- */
+.circles-container { max-width: 800px; margin: 0 auto; }
+.circle-category { margin-bottom: 30px; }
+.circle-cat-title {
+  font-size: 14px; color: var(--pipe); text-shadow: 2px 2px 0 #000;
+  margin-bottom: 12px; border-bottom: 2px solid var(--pipe); padding-bottom: 8px;
+}
+.circle-items { display: flex; flex-wrap: wrap; gap: 12px; }
+.circle-item {
+  background: var(--panel-bg); border: 2px solid #000;
+  padding: 8px 16px; font-size: 9px; color: #fff;
+  transition: border-color 0.2s;
+}
+.circle-item:hover { border-color: var(--accent); }
+.circle-item img { width: 40px; height: 40px; object-fit: cover; vertical-align: middle; margin-right: 8px; }
+
+/* ---------- Honors List ---------- */
+.honor-list { max-width: 700px; margin: 0 auto; }
+.honor-item {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--panel-bg); border: 3px solid #000;
+  padding: 16px; margin-bottom: 12px;
+}
+.honor-item:hover { border-color: var(--accent); }
+.honor-badge { font-size: 32px; }
+.honor-info { flex: 1; }
+.honor-title { font-size: 12px; color: var(--accent); margin-bottom: 6px; }
+.honor-meta { font-size: 8px; color: #999; display: flex; gap: 16px; flex-wrap: wrap; }
+.honor-cert { width: 60px; height: 60px; object-fit: cover; border: 2px solid #000; }
+
+/* ---------- Works Grid ---------- */
+.works-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px; max-width: 900px; margin: 0 auto;
+}
+.work-card {
+  background: var(--panel-bg); border: 3px solid #000;
+  overflow: hidden; text-decoration: none; color: inherit;
+  transition: transform 0.2s;
+}
+.work-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.work-cover { width: 100%; height: 130px; background: #222; }
+.work-cover img { width: 100%; height: 100%; object-fit: cover; }
+.work-body { padding: 12px; }
+.work-title { font-size: 10px; color: var(--accent); margin-bottom: 6px; }
+.work-type { font-size: 7px; color: #999; }
+
+/* ---------- Ability Cloud ---------- */
+.ability-cloud {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: center; max-width: 700px; margin: 0 auto;
+  padding: 20px;
+}
+.ability-tag {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel-bg); border: 2px solid #000;
+  padding: 10px 16px; font-size: 9px; color: #fff;
+  transition: transform 0.2s;
+}
+.ability-tag:hover { transform: scale(1.1); }
+.ability-tag[data-level="1"] { border-color: #555; filter: brightness(0.6); }
+.ability-tag[data-level="2"] { border-color: #888; filter: brightness(0.8); }
+.ability-tag[data-level="3"] { border-color: #bbb; }
+.ability-tag[data-level="4"] { border-color: var(--accent); box-shadow: 0 0 10px rgba(255,200,0,0.5); }
+.ability-icon { width: 20px; height: 20px; }
+
+/* Weather SVG icons as CSS backgrounds */
+.icon-cloud-dark { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='8' cy='12' r='6' fill='%23666'/><circle cx='14' cy='10' r='5' fill='%23666'/><circle cx='17' cy='13' r='4' fill='%23666'/></svg>") center/contain no-repeat; }
+.icon-cloud-rain { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='8' cy='10' r='5' fill='%23888'/><circle cx='14' cy='8' r='4' fill='%23888'/><rect x='7' y='15' width='2' height='4' fill='%234499ff'/><rect x='12' y='15' width='2' height='4' fill='%234499ff'/><rect x='16' y='15' width='2' height='4' fill='%234499ff'/></svg>") center/contain no-repeat; }
+.icon-cloud-white { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='8' cy='12' r='6' fill='%23fff'/><circle cx='14' cy='10' r='5' fill='%23fff'/><circle cx='17' cy='13' r='4' fill='%23fff'/></svg>") center/contain no-repeat; }
+.icon-cloud-sun { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='6' cy='6' r='4' fill='%23FFD700'/><rect x='5' y='0' width='2' height='3' fill='%23FFD700'/><rect x='5' y='9' width='2' height='3' fill='%23FFD700'/><rect x='0' y='5' width='3' height='2' fill='%23FFD700'/><rect x='9' y='5' width='3' height='2' fill='%23FFD700'/><circle cx='14' cy='14' r='5' fill='%23fff'/><circle cx='18' cy='12' r='4' fill='%23fff'/></svg>") center/contain no-repeat; }
+
+/* ---------- Progress Bar ---------- */
+#progress-bar-container {
+  position: fixed; bottom: 4px; left: 0; right: 0; height: 56px;  /* sunk lower, just above Dock */
+  z-index: 100; background: var(--ground-deep);
+  border-top: 4px solid #000;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+}
+.progress-labels {
+  display: flex; height: 20px; border-bottom: 2px solid #000;
+}
+.progress-label {
+  flex: 1; font-size: 7px; text-align: center; line-height: 20px;
+  color: #fff; text-shadow: 1px 1px 0 #000;
+  cursor: pointer; border-right: 2px solid #000;
+  transition: background 0.3s;
+}
+.progress-label:last-child { border-right: none; }
+.progress-label.active { background: var(--accent); }
+.progress-label:hover { background: rgba(255,255,255,0.2); }
+
+.progress-track {
+  display: flex; height: 40px; position: relative;
+}
+.progress-segment {
+  flex: 1; position: relative;
+  border-right: 2px solid rgba(0,0,0,0.3);
+  background: rgba(255,255,255,0.1);
+  transition: background 0.3s;
+}
+.progress-segment:last-child { border-right: none; }
+.progress-segment.active { background: rgba(255,255,255,0.25); }
+.progress-segment::after {
+  content: attr(data-pct);
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-size: 7px; color: rgba(255,255,255,0.5);
+}
+
+/* Mario sprite on progress bar */
+/* Horizontal position is controlled by JS via `left` (percentage).
+   The -50% translate keeps the sprite centered on that position.
+   Vertical animations (walk/div/dive/rise) live on the inner .mario-svg
+   so they never fight with the horizontal positioning. */
+.mario-sprite {
+  position: absolute; bottom: 8px; left: 0;
+  width: 24px; height: 24px;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: none;
+}
+.mario-svg {
+  width: 100%; height: 100%;
+  image-rendering: pixelated;
+  transform-origin: center bottom;
+  /* Make Mario stand out on the orange/red ground */
+  filter: drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff)
+          drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)
+          drop-shadow(0 0 3px rgba(255,255,255,0.6));
+}
+/* normal walking bob */
+.mario-sprite.walking .mario-svg { animation: marioWalk 0.32s steps(2) infinite; }
+@keyframes marioWalk {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+/* hidden while travelling underground */
+.mario-sprite.underground .mario-svg { opacity: 0; }
+/* dive into pipe */
+.mario-sprite.diving .mario-svg { animation: marioDive 0.6s ease forwards; }
+@keyframes marioDive {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(26px) scale(0.3); opacity: 0; }
+}
+/* rise out of pipe */
+.mario-sprite.rising .mario-svg { animation: marioRise 0.6s ease forwards; }
+@keyframes marioRise {
+  0%   { transform: translateY(26px) scale(0.3); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Pipes on progress bar */
+.pipe {
+  position: absolute; bottom: 14px;
+  width: 30px; height: 38px;
+  cursor: pointer; z-index: 4;
+  transition: transform 0.15s;
+}
+.pipe[data-target="0"] { left: calc(16.67% - 16px); }
+.pipe[data-target="1"] { left: calc(50% - 16px); }
+.pipe[data-target="2"] { left: calc(83.33% - 16px); }
+.pipe:hover { transform: scale(1.1); }
+.pipe-top {
+  width: 100%; height: 16px; background: var(--pipe);
+  border: 3px solid #000; border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+.pipe-body {
+  width: calc(100% - 8px); height: 34px; margin: 0 auto;
+  background: var(--pipe); border: 3px solid #000; border-top: none;
+}
+
+/* ---------- Main Menu Overlay ---------- */
+.menu-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+}
+.menu-panel {
+  background: var(--bg); border: 4px solid #000;
+  width: 500px; max-width: 90vw; max-height: 85vh;
+  overflow-y: auto; padding: 24px; position: relative;
+  box-shadow: var(--shadow);
+}
+.menu-title { font-size: 18px; color: var(--accent); text-shadow: 2px 2px 0 #000; text-align: center; margin-bottom: 20px; }
+.menu-close {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--accent); color: #fff; border: 2px solid #000;
+  width: 32px; height: 32px; cursor: pointer; font-size: 14px;
+  font-family: inherit;
+}
+.menu-section { margin-bottom: 24px; }
+.menu-section h3 { font-size: 12px; color: var(--pipe); text-shadow: 1px 1px 0 #000; margin-bottom: 10px; }
+.theme-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.theme-btn {
+  font-family: inherit; font-size: 8px; padding: 8px 12px;
+  background: var(--panel-bg); color: #fff; border: 2px solid #000;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.theme-btn.active { border-color: var(--accent); background: var(--accent); }
+.theme-btn:hover { border-color: var(--accent); }
+.slider-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; margin-bottom: 8px;
+}
+.slider-label input[type="range"] { flex: 1; }
+.contact-list { display: flex; flex-direction: column; gap: 8px; }
+.contact-item {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 9px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.contact-item a { color: var(--accent); text-decoration: none; }
+.contact-item a:hover { text-decoration: underline; }
+
+/* ---------- Comments ---------- */
+.comments-section {
+  max-width: 700px; margin: 0 auto; padding: 20px;
+}
+.comments-section h3 { font-size: 14px; color: var(--accent); text-shadow: 2px 2px 0 #000; margin-bottom: 16px; }
+.comment-form {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;
+  background: var(--panel-bg); padding: 16px; border: 2px solid #000;
+}
+.comment-form input, .comment-form textarea {
+  font-family: inherit; font-size: 9px; padding: 8px;
+  background: rgba(0,0,0,0.4); color: #fff; border: 2px solid #000;
+}
+.comment-form input::placeholder, .comment-form textarea::placeholder { color: #666; }
+.comment-form textarea { resize: vertical; }
+#comment-submit { align-self: flex-start; }
+.comment-list { display: flex; flex-direction: column; gap: 12px; }
+.comment-item {
+  background: var(--panel-bg); border: 2px solid #000; padding: 12px;
+}
+.comment-item.hidden-by-admin { opacity: 0.4; }
+.comment-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.comment-author { font-size: 9px; color: var(--accent); }
+.comment-date { font-size: 7px; color: #666; }
+.comment-body { font-size: 9px; line-height: 1.6; color: #fff; }
+.comment-contact { font-size: 7px; color: #555; margin-top: 4px; }
+
+/* ---------- Dialog ---------- */
+.dialog-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+}
+.dialog-box {
+  background: var(--bg); border: 4px solid #000;
+  padding: 32px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.dialog-text { font-size: 12px; color: #fff; text-shadow: 2px 2px 0 #000; margin-bottom: 20px; }
+.dialog-buttons { display: flex; gap: 16px; justify-content: center; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 400; background: rgba(0,0,0,0.85); color: #fff;
+  font-size: 10px; padding: 12px 24px; border: 2px solid var(--accent);
+  animation: toastShow 2s ease forwards;
+}
+@keyframes toastShow {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  15%,85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* ---------- Text Float Animation ---------- */
+.float-char {
+  display: inline-block;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.float-text:hover .float-char,
+.float-text.hover .float-char {
+  animation: floatUp 0.4s ease forwards;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) rotate(0); opacity: 0.3; }
+  50% { transform: translateY(-12px) rotate(-3deg); opacity: 1; }
+  100% { transform: translateY(-6px) rotate(0); opacity: 1; }
+}
+
+/* ---------- Brightness Overlay ---------- */
+#brightness-overlay {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0,0,0,0); pointer-events: none;
+  transition: background 0.3s;
+}
+
+/* ---------- Pipe Animation States (handled by .diving/.rising/.underground above) ---------- */
+
+/* ---------- Responsive (PC only, but prevent overflow) ---------- */
+@media (max-width: 768px) {
+  .game-title { font-size: 20px; }
+  .mario-btn--big { width: 240px; font-size: 14px; }
+  .achievement-grid { grid-template-columns: 1fr; }
+  .feed-grid { grid-template-columns: 1fr; }
+  .works-grid { grid-template-columns: 1fr; }
+  .menu-panel { width: 95vw; padding: 16px; }
+}

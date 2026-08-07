@@ -1,0 +1,171 @@
+/* ============================================================
+   clouds.css — 能力页"飘云"效果
+   ============================================================ */
+.cloud-stage {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.ability-cloud {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  width: var(--size) !important;
+  height: 110px !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 1;
+  transition: z-index 0s, transform 0.3s;
+  box-sizing: border-box;
+  overflow: visible;
+  display: block !important;
+}
+.ability-cloud:hover { z-index: 10; transform: scale(1.08); }
+.ability-cloud[data-cat="前端"] { --color: #87CEEB; }
+.ability-cloud[data-cat="后端"] { --color: #5B9BD5; }
+.ability-cloud[data-cat="设计"] { --color: #DDA0DD; }
+.ability-cloud[data-cat="其他"] { --color: #98D8C8; }
+
+/* 云的形状：用 svg 风格的多层椭圆模拟 */
+.cloud-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.35));
+  transition: filter 0.3s;
+}
+.ability-cloud:hover .cloud-body { filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5)); }
+
+/* 主体云朵：3 椭圆堆叠 */
+.cloud-body::before,
+.cloud-body::after,
+.cloud-body .bump1,
+.cloud-body .bump2,
+.cloud-body .bump3 {
+  content: '';
+  position: absolute;
+  background: var(--color);
+  border: 2px solid rgba(0,0,0,0.4);
+  box-shadow:
+    inset 0 -6px 12px rgba(0,0,0,0.2),
+    inset 0 6px 12px rgba(255,255,255,0.5);
+}
+.cloud-body::before {
+  width: 60%;
+  height: 70%;
+  left: 20%;
+  bottom: 0;
+  border-radius: 50%;
+  z-index: 1;
+}
+.cloud-body::after {
+  width: 35%;
+  height: 65%;
+  left: 5%;
+  bottom: 10%;
+  border-radius: 50%;
+  z-index: 2;
+}
+.cloud-body .bump1 {
+  width: 35%;
+  height: 70%;
+  right: 5%;
+  bottom: 5%;
+  border-radius: 50%;
+  z-index: 2;
+}
+.cloud-body .bump2 {
+  width: 30%;
+  height: 50%;
+  left: 25%;
+  top: 5%;
+  border-radius: 50%;
+  z-index: 2;
+}
+.cloud-body .bump3 {
+  width: 28%;
+  height: 50%;
+  right: 25%;
+  top: 10%;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* 高光 */
+.cloud-shine {
+  position: absolute;
+  top: 8%;
+  left: 25%;
+  width: 25%;
+  height: 20%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.7) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* 云上内容 */
+.cloud-content {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  text-align: center;
+  color: #1a1a1a;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
+  padding: 0 10px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.cloud-cat {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: rgba(0,0,0,0.5);
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+}
+.cloud-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+.cloud-level {
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+.cloud-bar {
+  width: 60%;
+  height: 3px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+.cloud-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700 0%, #F5A623 100%);
+  border-radius: 2px;
+}
+
+/* 飘动 — 用一个 transform 复合 keyframes 才能同时 X+Y */
+@keyframes cloud-float {
+  0%   { transform: translate3d(-25px, -8px, 0); }
+  50%  { transform: translate3d(15px, 6px, 0); }
+  100% { transform: translate3d(-25px, -8px, 0); }
+}
+.ability-cloud {
+  animation: cloud-float var(--drift-dur) ease-in-out var(--delay) infinite;
+}

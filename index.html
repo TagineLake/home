@@ -1,47 +1,100 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>yanzien · 个人官网</title>
-  <meta name="description" content="yanzien 的个人官网 —— 作品、文章与思考。" />
-  <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
-  <link rel="stylesheet" href="./css/style.css" />
-  <!-- 不蒜子 访客计数（免费，无需注册） -->
-  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TagineLake</title>
+  <meta name="description" content="TagineLake 的个人网站 - 用马里奥游戏的方式展示人生">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="TagineLake">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="用马里奥游戏的方式展示人生">
+  <meta property="og:image" content="assets/images/og-cover.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E52521">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23E52521'/><text x='8' y='12' font-size='10' text-anchor='middle' fill='white'>T</text></svg>">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parkour.css">
 </head>
 <body>
-  <canvas id="bg"></canvas>
 
-  <header class="nav" id="nav">
-    <div class="nav-inner">
-      <a class="logo" href="#/" id="logo">✦ yanzien</a>
-      <nav class="links" id="links">
-        <a href="#/" data-r="/">首页</a>
-        <a href="#/projects" data-r="/projects">作品库</a>
-        <a href="#/articles" data-r="/articles">文章</a>
-        <a href="#/about" data-r="/about">关于</a>
-        <a href="#/contact" data-r="/contact">联系</a>
-        <a href="#/guestbook" data-r="/guestbook">留言</a>
-      </nav>
-      <button class="nav-toggle" id="navToggle" aria-label="菜单">☰</button>
-    </div>
-  </header>
+  <!-- ==================== LOADING SCREEN ==================== -->
+  <div id="loading-screen">
+    <canvas id="mini-game-canvas" width="640" height="200"></canvas>
+    <p class="loading-hint">按空格键跳跃！正在加载...</p>
+    <div class="loading-bar"><div class="loading-bar-fill" id="loading-bar-fill"></div></div>
+  </div>
 
-  <div class="announce" id="announce" hidden></div>
+  <!-- ==================== MAIN APP ==================== -->
+  <div id="app" hidden>
 
-  <main id="app"></main>
+    <!-- ==================== START SCREEN ==================== -->
+    <section id="screen-start" class="screen active">
+      <div class="sky-layer"></div>
+      <div class="cloud-layer">
+        <div class="cloud" style="left:10%;top:15%;animation-duration:30s;"></div>
+        <div class="cloud" style="left:60%;top:25%;animation-duration:45s;animation-delay:-10s;"></div>
+        <div class="cloud" style="left:80%;top:10%;animation-duration:35s;animation-delay:-5s;"></div>
+      </div>
+      <div class="mountain-layer"></div>
+      <div class="ground-layer"></div>
 
-  <footer class="foot">
-    <div class="foot-inner">
-      <span id="footName">yanzien</span>
-      <span class="counter">访客 <b><span id="busuanzi_value_site_uv">0</span></b> · 浏览 <b><span id="busuanzi_value_site_pv">0</span></b></span>
-      <a href="./admin.html" class="admin-link">后台管理</a>
-    </div>
-  </footer>
+      <div class="start-content">
+        <h1 class="game-title" data-text="TAGINE LAKE">TAGINE LAKE</h1>
+        <p class="game-subtitle">- The Game of Life -</p>
+        <div class="announcement" id="announcement"></div>
+        <nav class="start-buttons">
+          <button class="mario-btn" id="btn-start">开始游戏</button>
+          <button class="mario-btn mario-btn--green" id="btn-menu">主菜单</button>
+          <button class="mario-btn mario-btn--red" id="btn-exit">退出游戏</button>
+        </nav>
+        <p class="visitor-counter">访客 <span id="busuanzi_value_site_uv">0</span> · 浏览 <span id="busuanzi_value_site_pv">0</span></p>
+      </div>
+    </section>
 
-  <script src="./vendor/marked.min.js"></script>
-  <script src="./vendor/minimarkdown.js"></script>
-  <script src="./js/site.js"></script>
+    <!-- ==================== DIFFICULTY SELECTION ==================== -->
+    <section id="screen-difficulty" class="screen">
+      <div class="sky-layer"></div>
+      <div class="ground-layer"></div>
+      <div class="difficulty-content">
+        <h2 class="section-title">选择难度</h2>
+        <div class="difficulty-buttons">
+          <a class="mario-btn mario-btn--big" href="easy/" data-mode="easy">
+            <span class="btn-icon">★</span>
+            简单模式
+          </a>
+          <a class="mario-btn mario-btn--big mario-btn--red" href="hard/" data-mode="hard">
+            <span class="btn-icon">★★★</span>
+            困难模式
+          </a>
+        </div>
+        <div class="difficulty-desc" id="difficulty-desc"></div>
+        <button class="mario-btn mario-btn--small" id="btn-back-to-start">返回</button>
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <!-- ==================== MAIN MENU OVERLAY / EXIT DIALOG / BRIGHTNESS ==================== -->
+  <!-- 由 js/menu.js 注入并接管（与内容页共用同一套菜单） -->
+
+  <!-- ==================== TOAST ==================== -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    console.log("%c嘿 被你发现了开发者模式! 送你一句：别看了。", "color:#E52521;font-size:16px;font-weight:bold;");
+  </script>
+  <script src="js/menu.js"></script>
+  <script src="js/site.js"></script>
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </body>
 </html>
