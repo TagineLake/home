@@ -204,15 +204,15 @@
         "cover": ""
       },
       {
-        "name": "塞尔达传说：旷野之息",
-        "rating": 5,
-        "comment": "翻过那座山看看。",
+        "name": "茶杯头",
+        "rating": 3,
+        "comment": "苦，但值得。",
         "cover": ""
       },
       {
-        "name": "空洞骑士",
+        "name": "phigros",
         "rating": 4,
-        "comment": "苦，但值得。",
+        "comment": "该游戏包括：双目失焦、灵魂出窍、心态失衡……",
         "cover": ""
       }
     ],
@@ -221,12 +221,6 @@
         "name": "三体",
         "rating": 5,
         "comment": "宇宙很大，生活更大。",
-        "cover": ""
-      },
-      {
-        "name": "活着",
-        "rating": 5,
-        "comment": "看完沉默了很久。",
         "cover": ""
       }
     ],
@@ -247,29 +241,39 @@
     "music": [
       {
         "name": "久石让 - Summer",
-        "rating": 5,
+        "rating": 3,
         "comment": "夏天的BGM。",
+        "cover": ""
+      },
+      {
+        "name": "今天不是明天",
+        "rating": 4,
+        "comment": "今天不是明天~",
+        "cover": ""
+      },
+      {
+        "name": "I can't wait",
+        "rating": 4,
+        "comment": "谁不想在电梯里跳会手势舞呢？",
         "cover": ""
       }
     ],
-    "movies": []
+    "movies": [
+      {
+        "name": "JoJo",
+        "rating": 4,
+        "comment": "黄金之风从我Tagine身后吹来！",
+        "cover": ""
+      }
+    ]
   },
   "honors": [
     {
       "id": "n1",
-      "year": "2024",
-      "title": "示例荣誉名称",
-      "org": "示例颁发机构",
-      "level": "省级",
-      "desc": "在这里写获奖说明，支持 **Markdown**。",
-      "cert": ""
-    },
-    {
-      "id": "n2",
-      "year": "2022",
-      "title": "示例奖学金",
-      "org": "示例学校",
-      "level": "校级",
+      "year": "2025",
+      "title": "全国青少年无人机编程大赛全市第四全省第八",
+      "org": "无人机协会",
+      "level": "市级&省级",
       "desc": "",
       "cert": ""
     }
@@ -289,18 +293,6 @@
       ],
       "cover": "",
       "link": ""
-    },
-    {
-      "id": "w2",
-      "title": "示例作品二",
-      "type": "工具",
-      "status": "done",
-      "desc": "在后台可以随时增删改这里的作品。",
-      "tech": [
-        "JavaScript"
-      ],
-      "cover": "",
-      "link": ""
     }
   ],
   "abilities": [
@@ -310,7 +302,7 @@
       "category": "前端"
     },
     {
-      "name": "JavaScript",
+      "name": "C++",
       "level": 3,
       "category": "前端"
     },
@@ -331,7 +323,7 @@
     },
     {
       "name": "Photoshop",
-      "level": 3,
+      "level": 2,
       "category": "设计"
     },
     {
