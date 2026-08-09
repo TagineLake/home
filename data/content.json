@@ -84,48 +84,48 @@
   },
   "achievements": [
     {
-      "id": "a1",
-      "title": "启程",
-      "desc": "第一次意识到**人生是一场横版过关游戏**，从此按下 START。",
-      "icon": "flag",
-      "date": "2008",
+      "id": "a2",
+      "title": "WASD还是前后左右",
+      "desc": "成功学会直立行走！3000000年的进化你2年就学会了！恭喜成为地球OnLine正式服玩家！",
+      "icon": "run",
+      "date": "2014",
       "rarity": "common",
       "hidden": false
     },
     {
-      "id": "a2",
-      "title": "第一枚金币",
-      "desc": "拿到人生中第一笔靠自己赚来的钱。",
-      "icon": "coin",
+      "id": "a1",
+      "title": "启程了，出发！",
+      "desc": "初出幼儿园，第一次意识到**人生是一场横版过关游戏**，从此按下 START。",
+      "icon": "flag",
       "date": "2016",
       "rarity": "common",
       "hidden": false
     },
     {
       "id": "a3",
-      "title": "隐藏关卡",
-      "desc": "在一个谁都没注意的角落，钻进了改变命运的管道。",
-      "icon": "mushroom",
-      "date": "2019",
+      "title": "特殊支线，也许世界有很多可能？",
+      "desc": "初步掌握一门乐器是你通向支线的钥匙。在一个没人注意的角落，钻进了改变命运的管道",
+      "icon": "music",
+      "date": "2025",
       "rarity": "rare",
       "hidden": false
     },
     {
       "id": "a4",
-      "title": "打通城堡",
-      "desc": "完成了一件曾经觉得不可能完成的事。",
-      "icon": "trophy",
-      "date": "2022",
-      "rarity": "epic",
+      "title": "迈向恶魔城",
+      "desc": "城中村的一个小孩走上了与周围人不同的道路——上了自己考上的初中：宁外！从此打开了噩梦模式……",
+      "icon": "book",
+      "date": "2025",
+      "rarity": "rare",
       "hidden": false
     },
     {
       "id": "a5",
       "title": "无尽模式",
       "desc": "开始相信：*通关不是终点，跑下去才是。*",
-      "icon": "run",
+      "icon": "star",
       "date": "至今",
-      "rarity": "legendary",
+      "rarity": "epic",
       "hidden": false
     },
     {
