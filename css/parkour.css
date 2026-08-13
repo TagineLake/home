@@ -1,10 +1,20 @@
 /* ============================================================
-   Parkour Canvas + 底部进度条样式
+   Parkour 跑酷带 + 进度条 + 角按钮 + 内容卡片布局
    ============================================================ */
+:root {
+  --parkour-h: 22vh;        /* 底部跑酷带高度 */
+  --progress-h: 28px;
+  --progress-offset: 40px;  /* 底部进度条距底（防任务栏挡） */
+}
+
+/* v4: 跑酷带限定在底部，不覆盖卡片 */
 .parkour-host {
   position: fixed;
-  inset: 0;
-  z-index: 0;
+  left: 0; right: 0;
+  top: auto;
+  bottom: var(--progress-offset);
+  height: var(--parkour-h);
+  z-index: 3;       /* 介于 page-content(4) 和 progress(5) 之间 */
   pointer-events: none;
 }
 .parkour-host canvas {
@@ -14,20 +24,22 @@
   height: 100%;
   display: block;
   image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
-/* ---------- 底部进度条（地下小进度条） ---------- */
+/* ---------- 进度条（z 高于 parkour） ---------- */
 .mini-progress {
   position: fixed;
-  left: 0; right: 0; bottom: 40px;   /* 抬高，避免被系统任务栏遮挡（又不过高） */
-  height: 28px;
-  z-index: 10;
+  left: 0; right: 0; bottom: var(--progress-offset);
+  height: var(--progress-h);
+  z-index: 5;
   background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%);
   border-top: 2px solid #000;
   box-shadow: 0 -2px 0 rgba(255,255,255,0.1) inset;
   display: flex;
   pointer-events: auto;
-  font-family: 'Press Start 2P', monospace;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 .mini-progress .seg {
   flex: 1;
@@ -42,7 +54,7 @@
 .mini-progress .seg .seg-fill {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #E52521 0%, #B71C1C 100%);
+  background: linear-gradient(180deg, var(--accent) 0%, #B71C1C 100%);
   transform-origin: left center;
   transform: scaleX(0);
   transition: transform 0.05s linear;
@@ -57,10 +69,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 11px;
   color: #fff;
   text-shadow: 1px 1px 0 #000;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   pointer-events: none;
 }
 .mini-progress .seg.current .seg-label { color: #FFD700; }
@@ -68,7 +80,7 @@
   position: absolute;
   right: 4px;
   top: 2px;
-  font-size: 6px;
+  font-size: 9px;
   color: rgba(255,255,255,0.7);
   text-shadow: 1px 1px 0 #000;
   pointer-events: none;
@@ -85,7 +97,7 @@
   z-index: 2;
 }
 
-/* ---------- 顶部圆角按钮：左返回 / 右菜单 ---------- */
+/* ---------- 角按钮（z 最高） ---------- */
 .corner-btn {
   position: fixed;
   top: 16px;
@@ -96,14 +108,15 @@
   height: 42px;
   padding: 0 16px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #E52521 0%, #B71C1C 100%);
+  background: linear-gradient(180deg, var(--accent) 0%, #B71C1C 100%);
   border: 2px solid #000;
   box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 6px 14px rgba(0,0,0,0.35);
   color: #fff;
   text-decoration: none;
   cursor: pointer;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
   text-shadow: 1px 1px 0 #000;
   transition: transform .1s, box-shadow .1s, filter .15s;
 }
@@ -113,22 +126,24 @@
 .corner-menu { right: 16px; }
 .corner-ico { font-size: 14px; line-height: 1; }
 
-
-/* ---------- 内容容器：固定自滚动区，底部留出马里奥跑动带 ---------- */
+/* ---------- 内容容器：固定自滚动区，底部让出跑酷带 ---------- */
 .page-content {
   position: fixed;
   left: 0; right: 0;
-  top: 64px;              /* 在左上/右上的圆角按钮之下（按钮高约 58px） */
-  bottom: 22%;            /* 预留底部带：马里奥跑动 + 进度条始终可见 */
-  z-index: 5;
+  top: 64px;
+  bottom: calc(var(--progress-offset) + var(--progress-h) + var(--parkour-h) + 12px);
+  z-index: 4;
   pointer-events: auto;
-  overflow-y: auto;       /* 内容装满时在此区域内滚动，不再整页无法滑动 */
+  overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 40px 40px;
+  padding: 12px 40px 24px;
   max-width: 1200px;
   margin: 0 auto;
   transition: opacity .4s ease;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* v4: sky 渐变由 page-content 自身背景提供（canvas 不再画 sky） */
+  background: transparent;
 }
 .page-content::-webkit-scrollbar { width: 10px; }
 .page-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.55); border-radius: 6px; }
@@ -156,4 +171,23 @@
   text-align: center;
   margin: 0 0 32px;
   opacity: 0.9;
+}
+
+/* ---------- CRT 扫描线氛围（极淡，不影响可读性） ---------- */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 3px
+  );
+  opacity: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay { display: none; }
 }

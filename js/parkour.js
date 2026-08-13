@@ -1,18 +1,19 @@
 /* ============================================================
-   tagine-lake-site — Parkour 引擎 (v3)
+   tagine-lake-site — Parkour 引擎 (v7)
    ------------------------------------------------------------
-   规格：
-   - 3 段循环，每段 30s，共 90s 一圈
-   - 地上场景：天空 + 地面 + 漂浮砖块/问号块 + 金币（由问号块顶出）；
-     马里奥匀速向右（屏幕 0.15 → 0.48），遇到前方问号块自动起跳顶块
-   - 点其他段 → 管道穿越（6s，丝滑）：
-       1) 脚下管道冒出，马里奥下沉钻入（1.2s，缓动）
-       2) 地下场景（砖墙 + 横向快跑）（3.6s）
-       3) 出口管道冒出，马里奥上升出现（1.2s，缓动）
-       4) 恢复正常地上行走
-   - 帧：MarioR01=站立(空闲)，MarioR02~05=跑步循环
-   - 回调：onSegChange / onChange / onTravelStart（传入目标段）
-   - dpr 自适应：所有尺寸与跳跃物理按 S=dpr 缩放，跨屏幕一致
+   改动日志（v7 vs v6）：
+   - 关键修复：sxOf 世界→屏幕比例 0.30*W → W。
+     v6 的 0.30*W 把 30 个砖块压缩到 0.30*W 像素内（每块间距 38px < 砖块宽 72px
+     → 贴图重叠），且 0.30*W 恰好等于马里奥屏幕移动量 → 砖块在屏幕上完全不动。
+     改为 W 后：每块间距 128px > 砖块宽 72px（不重叠），砖块正常左滚，
+     b.x==worldX 时 sxOf==marioScreenX（马里奥正下方）不变。
+   - drawBlocks 视野裁剪范围同步调整（匹配新的世界→屏幕比例）。
+   ============================================================
+   v6 改动（保留）：
+   - 统一 sxOf 坐标映射（修复 v4/v5 的"较远就跳 + 穿模"）
+   - 起跳窗口收紧（正下方 -4~+8px）+ 跳跃期间世界冻结
+   - BLOCK_FLOAT=96（给头顶 42px 真空间做弧线顶砖）
+   - 地下通道挂灯 + 前进箭头；管道出入冒烟；跑步帧 90ms
    ============================================================ */
 (function (global) {
   'use strict';
@@ -31,6 +32,14 @@
     });
   }
 
+  // v8: 超时保护——素材加载超过 8s 就放弃等待，用 fallback 绘制
+  function loadAllWithTimeout(tasks, ms) {
+    return Promise.race([
+      Promise.all(tasks),
+      new Promise(function (r) { setTimeout(function () { r([]); }, ms); })
+    ]);
+  }
+
   function makeRng(seed) {
     var s = (seed | 0) || 1;
     return function () {
@@ -39,18 +48,61 @@
     };
   }
 
-  // 砖块/问号块：统一漂浮在头顶高度，马里奥在地面跑不会撞上
+  // ------- 段生成 v2 -------
+  // 规则：
+  //   - 总长约 3000px（30 slots，每 slot 100px）
+  //   - slot 0（屏幕最左 ~15%）：不放问号块（前 6 个 slot 都是空，让马里奥先跑起来）
+  //   - 连续同类块 ≤ 3，超过强制换类型或变空
+  //   - 密度：~ 0.55（较 v3 的 0.62 略低）
+  //   - 偶尔生成 2~4 块连成平台（platform 风格），让顶砖更有节奏感
   function generateSegment(rng, baseX, segIndex) {
     var arr = [];
-    var slot = 0;
-    for (var i = 0; i < 30; i++) {
-      if (slot === 8 || slot === 22) { slot++; continue; }
-      var r = rng();
-      var x = baseX + slot * 80;
-      if (r < 0.20) arr.push({ type: 'question', x: x, hit: false });
-      else if (r < 0.62) arr.push({ type: 'brick', x: x });
-      slot++;
+    var lastType = null;
+    var sameStreak = 0;
+
+    // 前 6 slot 强制空（避免起跑就跳）
+    for (var i = 0; i < 6; i++) {
+      arr.push({ type: 'gap', x: baseX + i * 100 });
     }
+
+    // 0.40 概率生成"平台"（3~4 块连）
+    var platformStart = -1;
+    var platformLen = 0;
+    if (rng() < 0.40) {
+      platformStart = 7 + Math.floor(rng() * 4);  // 第 7~10 slot 起
+      platformLen = 3 + Math.floor(rng() * 2);    // 3~4 长
+    }
+
+    for (i = 6; i < 30; i++) {
+      var x = baseX + i * 100;
+      // 平台段：brick
+      if (i >= platformStart && i < platformStart + platformLen) {
+        arr.push({ type: 'brick', x: x });
+        lastType = 'brick'; sameStreak++;
+        continue;
+      }
+
+      var r = rng();
+      var type = 'gap';
+      if (r < 0.18) type = 'question';
+      else if (r < 0.55) type = 'brick';
+
+      // 连续同类 ≤3
+      if (type === lastType && sameStreak >= 3) type = 'gap';
+
+      if (type !== 'gap') {
+        arr.push({ type: type, x: x });
+        if (type === lastType) sameStreak++;
+        else sameStreak = 1;
+        lastType = type;
+      } else {
+        // 空段：重置 streak
+        if (sameStreak > 0) { lastType = null; sameStreak = 0; }
+        arr.push({ type: 'gap', x: x });
+      }
+    }
+    // 末尾段强制留 4 个空槽，方便切换段动画触发
+    for (var k = 0; k < 4; k++) arr.push({ type: 'gap', x: baseX + (30 + k) * 100 });
     return arr;
   }
 
@@ -85,7 +137,7 @@
       diveTarget: 0, diveExitX: 0.5
     };
 
-    this.t0 = 0;
+    this.groundTime = 0;       // v5: 仅在 onGround 且不在潜水时推进的世界时间
     this.raf = 0;
     this.lastT = 0;
     this.active = false;
@@ -95,31 +147,52 @@
     this.prevSeg = -1;
     this.segT = 0;
 
+    this.tc = { ground: '#D07510', pipe: '#43B047', accent: '#E52521' };
+    this.refreshThemeColors();
+
     this._bindResize();
   }
+
+  // 读取 CSS 变量，让 Canvas 颜色随主题切换
+  Parkour.prototype.refreshThemeColors = function () {
+    var root = getComputedStyle(document.documentElement);
+    function v(name, fallback) {
+      var val = root.getPropertyValue(name).trim();
+      return val || fallback;
+    }
+    this.tc.ground = v('--ground', '#D07510');
+    this.tc.pipe = v('--pipe', '#43B047');
+    this.tc.accent = v('--accent', '#E52521');
+  };
 
   Parkour.prototype._bindResize = function () {
     var self = this;
     function rs() {
       var rect = self.canvas.getBoundingClientRect();
       self.canvas.width = Math.max(320, Math.floor(rect.width * self.dpr));
-      self.canvas.height = Math.max(180, Math.floor(rect.height * self.dpr));
+      self.canvas.height = Math.max(120, Math.floor(rect.height * self.dpr));
       self.W = self.canvas.width;
       self.H = self.canvas.height;
       self.S = self.dpr;
-      self.TILE = 40 * self.S;          // 马里奥/砖块绘制尺寸（CSS 40px）
-      self.BLOCK_FLOAT = 86 * self.S;   // 漂浮块中心高出地面
-      self.groundY = self.H * 0.86;     // 地面线（脚底）—— 马里奥更低
-      self.underGroundY = self.H * 0.70;// 地下地板线
+      self.TILE = 36 * self.S;          // v4: 36（更紧凑、贴近 100px slot）
+      self.BLOCK_FLOAT = 96 * self.S;    // v6: 70→96，给头顶留出足够空隙，马里奥做真实起跳弧线顶砖
+      self.groundY = self.H - 8 * self.S;       // 地面贴着 canvas 底部
+      self.underGroundY = self.H * 0.50;        // 地下地板线（中部）
     }
     rs();
     window.addEventListener('resize', rs);
+  };  // 世界→屏幕 X：与马里奥 screenX 统一，保证"马里奥世界位置==砖块"时砖块正好在马里奥脚下/头顶
+  // v7: 比例从 0.30*W 改为 W（满屏宽），砖块间距 128px > 砖块宽 72px，不再重叠
+  Parkour.prototype.sxOf = function (worldX) {
+    var W = this.W;
+    return this.player.screenX * W + ((worldX - this.player.worldX) / 3000) * W;
   };
 
   Parkour.prototype.load = function () {
     var self = this;
-    var inSub = location.pathname.replace(/\\/g, '/').split('/').filter(function (x) { return x && x.indexOf('.html') < 0; }).length;
-    var base = (inSub > 0 ? '../' : '') + 'assets/sprites/';
+    var path = location.pathname.replace(/\\/g, '/');
+    var inSub = path.split('/').filter(function (x) { return x && x.indexOf('.html') < 0; }).length > 0;
+    var base = (inSub ? '../' : '') + 'assets/sprites/';
     var tasks = [
       loadImg(base + 'MarioR01_1.png').then(function (im) { self.sprites.mario[0] = im; }),
       loadImg(base + 'MarioR02_1.png').then(function (im) { self.sprites.mario[1] = im; }),
@@ -136,7 +209,7 @@
       loadImg(base + 'Wall_1.png').then(function (im) { self.sprites.wall = im; }),
       loadImg(base + 'Tube1.svg').then(function (im) { self.sprites.tube = im; })
     ];
-    return Promise.all(tasks).then(function () {
+    return loadAllWithTimeout(tasks, 8000).then(function () {
       self.sprReady = true;
       for (var s = 0; s < self.segments; s++) {
         var rng = makeRng(0x1234 + s * 1000);
@@ -154,8 +227,7 @@
     var self = this;
     if (this.active) return;
     this.active = true;
-    this.t0 = performance.now() - (self.segStart || 0) * this.segDuration;
-    this.lastT = this.t0;
+    this.lastT = performance.now();
     function loop(t) {
       if (!self.active) return;
       self.tick(t);
@@ -173,9 +245,8 @@
   Parkour.prototype.jump = function () {
     if (this.player.divePhase !== 0) return;
     if (this.player.onGround) {
-      this.player.vy = -15 * this.S;
+      this.player.vy = -11.5 * this.S;   // v5: 14→11.5，峰值 ~70，刚好擦到问号砖底
       this.player.onGround = false;
-      try { this.onSfx && this.onSfx('jump'); } catch (e) {}
     }
   };
 
@@ -192,8 +263,9 @@
     this.player.diveExitX = 0.5;
     this.jumpBlock = null;
 
-    this.entrancePipe = { screenX: this.player.screenX, emerging: true, emergeT: 0 };
-    this.exitPipe = { screenX: 0.5, emerging: false, emergeT: 0 };
+    // v4: 出场管道在屏幕 0.15 入场、入场管道在屏幕 0.5 出场
+    this.entrancePipe = { screenX: this.player.screenX, emerging: true, emergeT: 0, role: 'enter' };
+    this.exitPipe = { screenX: 0.5, emerging: false, emergeT: 0, role: 'exit' };
 
     this.onTravelStart(targetSeg);
   };
@@ -213,35 +285,41 @@
     var S = this.S;
 
     if (p.divePhase === 0) {
-      // 自然行走：按时间推进段
-      var elapsed = performance.now() - this.t0;
-      var totalT = (elapsed % this.fullLoop) / this.segDuration;
+      // v5: 仅当 onGround 才推进 groundTime — 跳跃期间世界冻结
+      if (p.onGround) {
+        this.groundTime += dt;
+      }
+      var totalT = (this.groundTime % this.fullLoop) / this.segDuration;
       this.curSeg = Math.min(Math.floor(totalT), this.segments - 1);
       this.segT = totalT - this.curSeg;
 
-      p.screenX = 0.15 + this.segT * 0.33;       // 0.15 → 0.48
-      p.worldX = this.curSeg * 3000 + this.segT * 3000;
-      p.facing = 1;
-      p.visible = true;
-      p.underground = false;
+      // v5: 仅在地面才更新 worldX/screenX；空中保持跳跃瞬间的位置
+      if (p.onGround) {
+        p.screenX = 0.15 + this.segT * 0.30;
+        p.worldX = this.curSeg * 3000 + this.segT * 3000;
+        p.facing = 1;
+        p.visible = true;
+        p.underground = false;
 
-      // 跑步帧循环（MarioR02~05）
-      p.frameT += dt;
-      if (p.frameT > 110) {
-        p.frameT = 0;
-        p.walkIdx = (p.walkIdx + 1) % WALK.length;
-        p.frame = WALK[p.walkIdx];
+        // 跑步帧循环（地面阶段）—— v6: 间隔 110→90ms，更利落
+        p.frameT += dt;
+        if (p.frameT > 90) {
+          p.frameT = 0;
+          p.walkIdx = (p.walkIdx + 1) % WALK.length;
+          p.frame = WALK[p.walkIdx];
+        }
       }
 
-      // 前方问号块到达 → 自动起跳
-      if (p.onGround && !this.jumpBlock) {
+      // v6: 起跳触发窗口收紧到正下方 -4~+12px（"马上到正下方才跳"）
+      // 配合跳跃期间世界冻结，马里奥垂直起跳、头顶正撞问号砖。
+      if (p.onGround && !this.jumpBlock && p.divePhase === 0) {
         var blocks = this.segBlocks[this.curSeg] || [];
         var marioX = p.screenX * this.W;
         for (var i = 0; i < blocks.length; i++) {
           var b = blocks[i];
           if (b.type !== 'question' || b.hit) continue;
-          var bsx = ((b.x - p.worldX) / 3000) * this.W + this.W * 0.15;
-          if (bsx > marioX - 8 * S && bsx < marioX + 45 * S) {
+          var bsx = this.sxOf(b.x);
+          if (bsx > marioX - 4 * S && bsx < marioX + 8 * S) {
             this.jumpBlock = b;
             this.jump();
             break;
@@ -249,7 +327,6 @@
         }
       }
 
-      // 越过段边界 → 进入新段时重置该段问号块 + 通知外部切换内容栏
       if (this.curSeg !== this.prevSeg) {
         this.prevSeg = this.curSeg;
         this.resetBlocks(this.curSeg);
@@ -258,53 +335,70 @@
     }
 
     // 垂直跳跃
-    if (!p.onGround) {
+    if (!p.onGround && p.divePhase === 0) {
       p.vy += 0.62 * S;
       p.y += p.vy;
       if (p.y >= 0) {
         p.y = 0; p.vy = 0; p.onGround = true;
-        this.jumpBlock = null;   // 落地未命中则放弃，等待下一个问号块
+        this.jumpBlock = null;
       } else {
         this.checkBlockHit();
       }
     }
 
-    // 管道穿越状态机（6s，缓动）
-    if (p.divePhase === 1) {                 // 下沉钻入
+    // 管道穿越状态机（6s：1.2s 沉 + 3.6s 地下 + 1.2s 升）
+    if (p.divePhase === 1) {
       p.diveT += dt;
       var pd = Math.min(1, p.diveT / 1200);
       var e1 = smooth(pd);
-      p.screenX = 0.45;
-      p.y = 30 * S * e1;                     // 缓缓沉入地面（管道内）
-      p.frame = 0;
-      p.visible = pd < 0.6;
+      // 在屏幕中央（入管道位置）
+      p.screenX = this.entrancePipe.screenX;
+      p.y = 24 * S * e1;                 // 缓沉
+      p.frame = 0;                       // 站立帧
+      p.visible = pd < 0.65;
+      if (this.entrancePipe) this.entrancePipe.emergeT = e1;
       if (pd >= 1) {
-        p.divePhase = 2; p.diveT = 0; p.underground = true; p.visible = true; p.walkIdx = 0;
+        p.divePhase = 2; p.diveT = 0; p.underground = true; p.visible = true;
+        // 地下动画开始：entrance 立即收回可见、exit 准备出现
+        if (this.entrancePipe) this.entrancePipe.hidden = true;
       }
-    } else if (p.divePhase === 2) {          // 地下快跑
+    } else if (p.divePhase === 2) {
       p.diveT += dt;
       var pu = Math.min(1, p.diveT / 3600);
       p.screenX = 0.45 + 0.05 * pu;
-      p.y = 0;                               // 站在地下地板线上（对齐）
+      p.y = 0;
       p.underground = true;
       p.visible = true;
       p.frameT += dt * 2;
-      if (p.frameT > 70) { p.frameT = 0; p.walkIdx = (p.walkIdx + 1) % WALK.length; p.frame = WALK[p.walkIdx]; }
-      if (pu >= 1) { p.divePhase = 3; p.diveT = 0; p.underground = false; if (this.exitPipe) this.exitPipe.emerging = true; }
-    } else if (p.divePhase === 3) {          // 上升钻出
+      if (p.frameT > 70) {
+        p.frameT = 0;
+        p.walkIdx = (p.walkIdx + 1) % WALK.length;
+        p.frame = WALK[p.walkIdx];
+      }
+      // 退出：phase 2 末尾 0.6s 时退出管道冒出
+      if (this.exitPipe && pu > 0.7 && !this.exitPipe.emerging) {
+        this.exitPipe.emerging = true;
+      }
+      if (this.exitPipe && this.exitPipe.emerging) {
+        this.exitPipe.emergeT = Math.min(1, (this.exitPipe.emergeT || 0) + dt / 600);
+      }
+      if (pu >= 1) {
+        p.divePhase = 3; p.diveT = 0; p.underground = false;
+      }
+    } else if (p.divePhase === 3) {
       p.diveT += dt;
       var pr = Math.min(1, p.diveT / 1200);
       var e3 = smooth(pr);
-      p.screenX = 0.5;
-      p.y = 30 * S * (1 - e3);               // 从管道内升到地面
+      p.screenX = this.exitPipe.screenX;
+      p.y = 24 * S * (1 - e3);
       p.frame = 0;
       p.visible = pr > 0.4;
       if (pr >= 1) {
         p.divePhase = 0; p.diveT = 0; p.y = 0; p.onGround = true; p.visible = true; p.underground = false;
-        this.t0 = performance.now() - p.diveTarget * this.segDuration;
+        this.groundTime = p.diveTarget * this.segDuration;  // v5: 用 groundTime 接管
         this.curSeg = p.diveTarget;
         this.prevSeg = p.diveTarget;
-        this.resetBlocks(p.diveTarget);   // 手动切换到达目标段：问号块复位
+        this.resetBlocks(p.diveTarget);
         this.segT = 0;
         this.entrancePipe = null;
         this.exitPipe = null;
@@ -312,8 +406,9 @@
       }
     }
 
-    if (this.entrancePipe) this.entrancePipe.emergeT = Math.min(1, (this.entrancePipe.emergeT || 0) + dt / 300);
-    if (this.exitPipe) this.exitPipe.emergeT = Math.min(1, (this.exitPipe.emergeT || 0) + dt / 300);
+    if (this.entrancePipe && !this.entrancePipe.hidden && this.entrancePipe.emergeT !== undefined && p.divePhase === 1) {
+      this.entrancePipe.emergeT = Math.min(1, this.entrancePipe.emergeT + dt / 800);
+    }
 
     // 动态金币
     for (var c = this.coins.length - 1; c >= 0; c--) {
@@ -325,7 +420,6 @@
     }
   };
 
-  // 进入某段时重置该段所有问号块（变回金色未使用状态）
   Parkour.prototype.resetBlocks = function (seg) {
     var bs = this.segBlocks[seg] || [];
     for (var i = 0; i < bs.length; i++) {
@@ -333,113 +427,112 @@
     }
   };
 
-  // 起跳中头顶撞到漂浮块：问号块→变最暗并顶出金币
   Parkour.prototype.checkBlockHit = function () {
     var p = this.player;
     if (!this.jumpBlock) return;
     var b = this.jumpBlock;
-    var W = this.W, gy = this.groundY, S = this.S;
-    var bsx = ((b.x - p.worldX) / 3000) * W + W * 0.15;
-    var bsy = gy - this.BLOCK_FLOAT;                 // 块中心
+    var W = this.W, gy = this.groundY, S = this.S, t = this.TILE;
+    var bsx = this.sxOf(b.x);
+    var bsy = gy - this.BLOCK_FLOAT;
     var marioX = p.screenX * W;
-    var marioHeadY = (gy + p.y) - this.TILE;         // 马里奥头顶
-    if (Math.abs(bsx - marioX) < 30 * S &&
-        marioHeadY <= bsy + 16 * S && marioHeadY >= bsy - 16 * S) {
+
+    // v5: 完整身体-方块相交检测（X 容忍 TILE，Y 是身体和方块矩形相交）
+    // 身体 X 范围 [marioX - t/2, marioX + t/2]
+    // 方块 X 范围 [bsx - t/2, bsx + t/2]
+    // 身体 Y 范围 [gy + p.y - t, gy + p.y]  (head top → foot)
+    // 方块 Y 范围 [bsy - t/2, bsy + t/2]  (top → bottom)
+    var xOverlap = Math.abs(bsx - marioX) < t;
+    var bodyBottom = gy + p.y;
+    var bodyTop = bodyBottom - t;
+    var blockTop = bsy - t / 2;
+    var blockBottom = bsy + t / 2;
+    var yOverlap = bodyBottom >= (blockTop - 2 * S) && bodyTop <= (blockBottom + 2 * S);
+
+    if (xOverlap && yOverlap) {
       if (b.type === 'question' && !b.hit) {
         b.hit = true;
         this.spawnCoins(b, bsx, bsy);
       }
       this.jumpBlock = null;
-      p.vy = 4 * S;   // 顶到后微微回落
+      p.vy = 5 * S;   // v5: 更明显的"小弹回"，让马里奥快速落回地面
     }
   };
 
   Parkour.prototype.spawnCoins = function (b, sx, sy) {
     var S = this.S;
-    for (var i = 0; i < 3; i++) {
-      this.coins.push({
-        x: sx + (i - 1) * 16 * S,
-        y: sy - 8 * S,
-        vy: (-7 - i * 1.2) * S,
-        vx: (i - 1) * 1.6 * S,
-        life: 0,
-        maxLife: 46 + i * 6
-      });
-    }
+    // v4: 1 个主金币（用马里奥风的"扇形"+ 短初速）
+    this.coins.push({
+      x: sx, y: sy - 6 * S,
+      vy: -8 * S, vx: 0,
+      life: 0, maxLife: 36
+    });
   };
 
   // ---------- 渲染 ----------
   Parkour.prototype.draw = function () {
-    var ctx = this.ctx, W = this.W, H = this.H;
+    var ctx = this.ctx, W = this.W, H = this.H, S = this.S;
     ctx.clearRect(0, 0, W, H);
+
+    // v4: 地下只画地下（不再画 sky/ground/blocks）
     if (this.player.divePhase === 2) {
       this.drawUnderground();
-    } else {
-      this.drawSky();
-      this.drawGround();
-      this.drawBlocks();
-      this.drawPipes();
-      this.drawCoinsDynamic();
-      this.drawMario();
+      return;
     }
+
+    // 地上：sky 由 CSS 提供，canvas 只画 ground + blocks + pipes + coins + mario
+    this.drawGround();
+    this.drawBlocks();
+
+    // v4: 按 divePhase 选择性画管道（不重叠）
+    if (this.player.divePhase === 0) {
+      // 正常态不画管道
+    } else if (this.player.divePhase === 1 && this.entrancePipe && !this.entrancePipe.hidden) {
+      this.drawTube(this.entrancePipe.screenX * W, this.groundY, this.entrancePipe.emergeT || 0);
+      // v6: 入口冒白色烟雾团
+      this.drawSmoke(this.entrancePipe.screenX * W, this.groundY - 58 * S, this.entrancePipe.emergeT || 0);
+    } else if (this.player.divePhase === 3 && this.exitPipe) {
+      this.drawTube(this.exitPipe.screenX * W, this.groundY, this.exitPipe.emergeT || 0);
+      // v6: 出口冒白色烟雾团
+      this.drawSmoke(this.exitPipe.screenX * W, this.groundY - 58 * S, this.exitPipe.emergeT || 0);
+    }
+
+    this.drawCoinsDynamic();
+    this.drawMario();
   };
 
   Parkour.prototype.drawLoading = function () {
     var ctx = this.ctx, W = this.W, H = this.H;
-    ctx.fillStyle = '#5C94FC'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff'; ctx.font = (20 * this.S) + 'px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = this.tc.pipe; ctx.fillRect(0, H - 60 * this.S, W, 60 * this.S);
+    ctx.fillStyle = '#fff'; ctx.font = (16 * this.S) + 'px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('加载中...', W / 2, H / 2);
   };
 
-  Parkour.prototype.drawSky = function () {
-    var ctx = this.ctx, W = this.W, H = this.H, S = this.S;
-    var grd = ctx.createLinearGradient(0, 0, 0, H);
-    grd.addColorStop(0, '#5C94FC');
-    grd.addColorStop(0.7, '#87CEEB');
-    grd.addColorStop(1, '#B0E0E6');
-    ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
-    var rng = makeRng(42);
-    for (var i = 0; i < 3; i++) {
-      var cx = ((rng() * W) + (performance.now() / 80 * (0.2 + rng() * 0.3))) % (W + 200) - 100;
-      var cy = 30 * S + i * 50 * S + rng() * 30 * S;
-      this.drawCloud(cx, cy, (60 + rng() * 40) * S);
-    }
-  };
-
-  Parkour.prototype.drawCloud = function (cx, cy, size) {
-    var ctx = this.ctx;
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    var s = size / 60;
-    ctx.beginPath();
-    ctx.arc(cx - 20 * s, cy, 20 * s, 0, Math.PI * 2);
-    ctx.arc(cx, cy - 8 * s, 24 * s, 0, Math.PI * 2);
-    ctx.arc(cx + 22 * s, cy, 18 * s, 0, Math.PI * 2);
-    ctx.arc(cx + 8 * s, cy + 8 * s, 16 * s, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
   Parkour.prototype.drawGround = function () {
-    var ctx = this.ctx, W = this.W, H = this.H, gy = this.groundY, S = this.S;
-    ctx.fillStyle = '#43B047'; ctx.fillRect(0, gy, W, 8 * S);
-    ctx.fillStyle = '#D07510'; ctx.fillRect(0, gy + 8 * S, W, H - gy - 8 * S);
+    var ctx = this.ctx, W = this.W, gy = this.groundY, S = this.S;
+    // 草线 + 橙色地砖带（贴在 canvas 底部）
+    ctx.fillStyle = this.tc.pipe; ctx.fillRect(0, gy, W, 6 * S);
+    ctx.fillStyle = this.tc.ground; ctx.fillRect(0, gy + 6 * S, W, this.H - gy - 6 * S);
+    // 砖缝竖纹（v8: 用 groundTime 而非 performance.now，跳跃冻结时砖缝也冻结）
     ctx.fillStyle = '#8B4A08';
-    var off = (performance.now() / 50) % (32 * S);
-    for (var x = -off; x < W; x += 32 * S) ctx.fillRect(x, gy + 8 * S, 1 * S, H - gy - 8 * S);
-    ctx.fillStyle = '#E59444'; ctx.fillRect(0, gy + 8 * S, W, 2 * S);
+    var off = (this.groundTime / 50) % (28 * S);
+    for (var x = -off; x < W; x += 28 * S) ctx.fillRect(x, gy + 6 * S, 1 * S, this.H - gy - 6 * S);
+    // 砖间白线
+    ctx.fillStyle = '#E59444'; ctx.fillRect(0, gy + 6 * S, W, 2 * S);
   };
 
-  // 砖块/问号块：统一漂浮在头顶高度（与马里奥共用 0.15W 原点，保证对齐）
   Parkour.prototype.drawBlocks = function () {
     var ctx = this.ctx, W = this.W, gy = this.groundY;
     var blocks = this.segBlocks[this.curSeg] || [];
-    var viewStart = this.player.worldX - W * 0.3;
-    var viewEnd = this.player.worldX + W * 1.0;
+    // v7: 视野裁剪范围匹配新的 W 比例（满屏宽 = 3000 世界单位）
+    var viewStart = this.player.worldX - 1500;
+    var viewEnd = this.player.worldX + 3500;
     for (var i = 0; i < blocks.length; i++) {
       var b = blocks[i];
+      if (b.type === 'gap') continue;
       if (b.x < viewStart || b.x > viewEnd) continue;
-      var sx = ((b.x - this.player.worldX) / 3000) * W + W * 0.15;
+      var sx = this.sxOf(b.x);
       if (sx < -60 || sx > W + 60) continue;
-      var sy = gy - this.BLOCK_FLOAT;   // 漂浮高度
+      var sy = gy - this.BLOCK_FLOAT;
       if (b.type === 'question') this.drawQBlock(sx, sy, b.hit);
       else this.drawBrick(sx, sy);
     }
@@ -447,8 +540,11 @@
 
   Parkour.prototype.drawBrick = function (x, y) {
     var ctx = this.ctx, im = this.sprites.wall, S = this.S, t = this.TILE;
-    if (im) { ctx.drawImage(im, x - t / 2, y - t / 2, t, t); return; }
-    ctx.fillStyle = '#D07510'; ctx.fillRect(x - t / 2, y - t / 2, t, t);
+    if (im && im.naturalWidth > 0) {
+      ctx.drawImage(im, x - t / 2, y - t / 2, t, t);
+      return;
+    }
+    ctx.fillStyle = this.tc.ground; ctx.fillRect(x - t / 2, y - t / 2, t, t);
     ctx.strokeStyle = '#000'; ctx.lineWidth = 2 * S; ctx.strokeRect(x - t / 2, y - t / 2, t, t);
   };
 
@@ -462,47 +558,37 @@
       return;
     }
     var im = this.sprites.qBlock[Math.floor(performance.now() / 200) % 4];
-    if (im) { ctx.drawImage(im, x - t / 2, y - t / 2, t, t); return; }
+    if (im && im.naturalWidth > 0) { ctx.drawImage(im, x - t / 2, y - t / 2, t, t); return; }
     ctx.fillStyle = '#F5A623'; ctx.fillRect(x - t / 2, y - t / 2, t, t);
-    ctx.fillStyle = '#000'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', x, y + 5 * S);
+    ctx.fillStyle = '#000'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', x, y + 5 * S);
   };
 
-  Parkour.prototype.drawPipes = function () {
-    var ctx = this.ctx, W = this.W, gy = this.groundY;
-    if (this.entrancePipe) {
-      var sx1 = this.entrancePipe.screenX * W;
-      var ey1 = gy - 40 * this.S * this.entrancePipe.emergeT;
-      this.drawTube(sx1, ey1 + 40 * this.S);
+  Parkour.prototype.drawTube = function (x, y, emergeT) {
+    var ctx = this.ctx, S = this.S, w = 56 * S, h = 60 * S;
+    var ey = y - h * emergeT;
+    var im = this.sprites.tube;
+    if (im && im.naturalWidth > 0) {
+      try {
+        ctx.drawImage(im, x - w / 2, ey - h, w, h);
+        return;
+      } catch (e) {}
     }
-    if (this.exitPipe) {
-      var sx2 = this.exitPipe.screenX * W;
-      var ey2 = gy - 40 * this.S * (this.exitPipe.emerging ? this.exitPipe.emergeT : 0);
-      this.drawTube(sx2, ey2 + 40 * this.S);
-    }
-  };
-
-  Parkour.prototype.drawTube = function (x, y) {
-    var ctx = this.ctx, im = this.sprites.tube, S = this.S, w = 48 * S, h = 64 * S;
-    if (im && im.naturalWidth) {
-      try { ctx.drawImage(im, x - w / 2, y - h, w, h); return; } catch (e) {}
-    }
-    ctx.fillStyle = '#43B047';
-    ctx.fillRect(x - w / 2 + 4 * S, y - h + 14 * S, w - 8 * S, h - 14 * S);
-    ctx.fillStyle = '#2E7D32';
-    ctx.fillRect(x - w / 2, y - h, w, 16 * S);
-    ctx.fillStyle = '#1B5E20';
-    ctx.fillRect(x - w / 2, y - h, 4 * S, h);
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 2 * S; ctx.strokeRect(x - w / 2, y - h, w, h);
+    // 简笔管道（用主题色 + 黑白叠加做阴影，适配所有主题）
+    ctx.fillStyle = this.tc.pipe; ctx.fillRect(x - w / 2, ey - h, w, h);
+    ctx.globalAlpha = 0.25; ctx.fillStyle = '#000'; ctx.fillRect(x - w / 2, ey - h, w, 14 * S); ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#fff'; ctx.fillRect(x - w / 2 + 6 * S, ey - h + 18 * S, 4 * S, h - 22 * S); ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2 * S;
+    ctx.strokeRect(x - w / 2, ey - h, w, h);
   };
 
   Parkour.prototype.drawCoinsDynamic = function () {
     var ctx = this.ctx, S = this.S;
     for (var i = 0; i < this.coins.length; i++) {
       var c = this.coins[i];
-      var frame = Math.floor((c.life + i) / 6) % 2;
+      var frame = Math.floor(c.life / 5) % 2;
       var im = this.sprites.coin[frame];
-      var s = 22 * S;
-      if (im) { ctx.drawImage(im, c.x - s / 2, c.y - s / 2, s, s); }
+      var s = 20 * S;
+      if (im && im.naturalWidth > 0) { ctx.drawImage(im, c.x - s / 2, c.y - s / 2, s, s); }
       else { ctx.fillStyle = '#F5A623'; ctx.beginPath(); ctx.arc(c.x, c.y, s / 2, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 2 * S; ctx.stroke(); }
     }
   };
@@ -510,12 +596,12 @@
   Parkour.prototype.drawMario = function () {
     var p = this.player;
     if (!p.visible) return;
-    var ctx = this.ctx, W = this.W, gy = this.groundY, t = this.TILE;
-    var sx = p.screenX * W;
+    var ctx = this.ctx, gy = this.groundY, t = this.TILE;
+    var sx = p.screenX * this.W;
     var footY = (p.underground ? this.underGroundY : gy) + p.y;
     var frame = p.frame;
     var im = this.sprites.mario[frame] || this.sprites.mario[0];
-    if (im) {
+    if (im && im.naturalWidth > 0) {
       ctx.save();
       if (p.facing < 0) {
         ctx.translate(sx + t / 2, 0); ctx.scale(-1, 1);
@@ -525,36 +611,87 @@
       }
       ctx.restore();
     } else {
-      ctx.fillStyle = '#E52521'; ctx.fillRect(sx - 12 * this.S, footY - 30 * this.S, 24 * this.S, 30 * this.S);
+      ctx.fillStyle = this.tc.accent; ctx.fillRect(sx - 12 * S, footY - 30 * S, 24 * S, 30 * S);
     }
   };
 
-  // 地下场景（马里奥风：黑底 + 橙砖墙顶/地）
+  // v6: 管道出入烟雾团（先膨胀后淡出）
+  Parkour.prototype.drawSmoke = function (x, y, t) {
+    var ctx = this.ctx, S = this.S;
+    if (t <= 0) return;
+    var appear = Math.min(1, t * 2);
+    var fade = t > 0.5 ? Math.max(0, 1 - (t - 0.5) * 2) : 1;
+    var r = (10 + 22 * appear) * S;
+    ctx.save();
+    ctx.globalAlpha = 0.8 * fade;
+    var g = ctx.createRadialGradient(x, y, 2 * S, x, y, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  };
+
+  // 地下（v6：挂灯暖光 + 前进方向箭头，更有马里奥地下关氛围）
   Parkour.prototype.drawUnderground = function () {
     var ctx = this.ctx, W = this.W, H = this.H, S = this.S, gy = this.underGroundY;
+    // 黑底
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-    this.drawBrickBand(0, H * 0.12);          // 顶砖墙
-    this.drawBrickBand(gy, H - gy);           // 地砖墙（马里奥站其上）
+    // 顶砖墙 + 地砖墙
+    this.drawBrickBand(0, H * 0.30);          // 顶墙
+    this.drawBrickBand(gy, H - gy);           // 地墙
+    // 挂灯：灯绳 + 灯泡 + 暖光晕
+    var n = 5;
+    for (var i = 0; i < n; i++) {
+      var lx = (W / (n + 1)) * (i + 1);
+      var cordTop = H * 0.30, bulbY = H * 0.30 + 16 * S;
+      ctx.strokeStyle = '#555'; ctx.lineWidth = 1 * S;
+      ctx.beginPath(); ctx.moveTo(lx, cordTop); ctx.lineTo(lx, bulbY); ctx.stroke();
+      var g = ctx.createRadialGradient(lx, bulbY + 6 * S, 1 * S, lx, bulbY + 6 * S, 28 * S);
+      g.addColorStop(0, 'rgba(255,220,120,0.55)');
+      g.addColorStop(1, 'rgba(255,220,120,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, bulbY + 6 * S, 28 * S, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#FFE08A'; ctx.beginPath(); ctx.arc(lx, bulbY + 6 * S, 5 * S, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5 * S; ctx.stroke();
+    }
+    // 前进方向箭头（提示马里奥向右走）
+    ctx.save();
+    ctx.globalAlpha = 0.30;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold ' + (44 * S) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('→', W * 0.5, H * 0.62);
+    ctx.restore();
+    // 马里奥
     this.drawMario();
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold ' + (13 * S) + 'px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('地下通道', W / 2, 18 * S);
   };
 
   Parkour.prototype.drawBrickBand = function (y0, h) {
     var ctx = this.ctx, W = this.W, S = this.S, bw = 32 * S, bh = 16 * S;
     ctx.fillStyle = '#C84C0C';
     for (var y = y0; y < y0 + h; y += bh) {
-      var off = (Math.floor((y - y0) / bh) % 2) ? bw / 2 : 0;
+      var off = ((y - y0) / bh) % 2 < 1 ? bw / 2 : 0;
       for (var x = -off; x < W; x += bw) ctx.fillRect(x, y, bw - 1 * S, bh - 1 * S);
     }
     ctx.fillStyle = '#000';
     for (var y2 = y0; y2 < y0 + h; y2 += bh) ctx.fillRect(0, y2, W, 1 * S);
+    // 竖向 mortar
+    for (var y3 = y0; y3 < y0 + h; y3 += bh) {
+      var ox = ((y3 - y0) / bh) % 2 < 1 ? bw / 2 : 0;
+      for (var x2 = -ox; x2 < W; x2 += bw) ctx.fillRect(x2, y3, 1 * S, bh);
+    }
   };
 
   Parkour.prototype.pause = function () { this.active = false; if (this.raf) cancelAnimationFrame(this.raf); };
-  Parkour.prototype.resume = function () { this.start(); };
+  Parkour.prototype.resume = function () {
+    if (this.active) return;
+    this.active = true;
+    this.lastT = performance.now();
+    var self = this;
+    function loop(t) { if (!self.active) return; self.tick(t); self.raf = requestAnimationFrame(loop); }
+    this.raf = requestAnimationFrame(loop);
+    // 注意：resume 不触发 onSegChange（不同于 start）
+  };
   Parkour.prototype.unlockAudio = function () { this.audioUnlocked = true; };
 
   global.Parkour = Parkour;

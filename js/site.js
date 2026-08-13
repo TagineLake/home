@@ -12,12 +12,16 @@
 
   var S = { content: null, audioUnlocked: false, bgmEl: null };
 
-  // ---------- 加载 content.json ----------
+  // ---------- 加载 content.json（全局缓存，与 menu.js / content-render.js 共享） ----------
   function loadContent() {
-    return fetch('data/content.json', { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-      .catch(function (e) { console.warn('[content] load fail:', e); return { site: { name: 'TagineLake' } }; })
-      .then(function (d) { S.content = d; return d; });
+    if (!window._tlContentPromise) {
+      window._tlContentPromise = fetch('data/content.json', { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+        .catch(function (e) { console.warn('[content] load fail:', e); return { site: { name: 'TagineLake' } }; });
+    }
+    // Always attach our own .then so S.content is set even if the promise
+    // was created by another module (menu.js / content-render.js).
+    return window._tlContentPromise.then(function (d) { S.content = d; return d; });
   }
 
   // ---------- 公告 ----------
@@ -66,10 +70,11 @@
       miniGame.raf = requestAnimationFrame(loop);
     }
     miniGame.raf = requestAnimationFrame(loop);
-    document.addEventListener('keydown', function jump(e) {
-      if (!miniGame || !miniGame.alive) return;
+    function jumpHandler(e) {
+      if (!miniGame || !miniGame.alive) { document.removeEventListener('keydown', jumpHandler); return; }
       if (e.code === 'Space' && miniGame.onGround) { e.preventDefault(); miniGame.vy = -10; miniGame.onGround = false; miniGame.score++; }
-    });
+    }
+    document.addEventListener('keydown', jumpHandler);
   }
   function stopMiniGame() { if (miniGame) { miniGame.alive = false; cancelAnimationFrame(miniGame.raf); miniGame = null; } }
 

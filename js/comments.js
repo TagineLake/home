@@ -1,6 +1,6 @@
 /* ============================================================
    comments.js — 简易评论（feed 页面用）
-   - 提交：姓名 + 微信号 + QQ + 内容，必填
+   - 提交：姓名 + 内容必填；微信号 / QQ 二选一必填
    - 通过 ../functions/[[catchall]].js
    - 当 workerUrl 为空时同源（本地预览不会生效，但前端逻辑完整）
    ============================================================ */
@@ -11,10 +11,17 @@
   function escHtml(s) { return String(s || '').replace(/[&<>"']/g, function (c) {
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
   }); }
+  // 安全的 Markdown 渲染：先转义 HTML，再用 marked 解析（marked 只会生成它自己的标签）
   function md(text) {
     if (!text) return '';
-    if (window.marked) { try { return window.marked.parse(String(text)); } catch (e) {} }
-    return '<p>' + escHtml(text).replace(/\n/g, '<br>') + '</p>';
+    var safe = escHtml(String(text));
+    if (window.marked) {
+      try {
+        // marked 2.x 默认不输出原始 HTML（输入已转义），安全
+        return window.marked.parse(safe);
+      } catch (e) {}
+    }
+    return '<p>' + safe.replace(/\n/g, '<br>') + '</p>';
   }
   function fmtDate(iso) {
     if (!iso) return '';
@@ -69,7 +76,7 @@
             '<span style="font-size:11px;color:#aaa;">' + escHtml(fmtDate(m.time || m.createdAt)) + '</span>' +
           '</div>' +
           '<div style="font-size:14px;line-height:1.6;">' + md(m.content || '') + '</div>' +
-          (m.reply ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(229,37,33,0.15);border-left:3px solid #E52521;font-size:13px;"><strong style="color:#FFD700;">站长回复：</strong>' + md(m.reply) + '</div>' : '');
+          (m.reply ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(229,37,33,0.15);border-left:3px solid var(--accent);font-size:13px;"><strong style="color:#FFD700;">站长回复：</strong>' + md(m.reply) + '</div>' : '');
         host.appendChild(c);
       }
     });
@@ -84,12 +91,18 @@
     var status = $('#c-status');
     var btn = $('#c-submit');
 
-    if (!name || !wechat || !qq || !content) {
+    // 姓名 + 内容必填；微信号 / QQ 二选一必填
+    if (!name || !content) {
       status.style.color = '#F5A623';
-      status.textContent = '请填写完整';
+      status.textContent = '请填写姓名和内容';
       return;
     }
-    if (!/^[1-9][0-9]{4,13}$/.test(qq)) {
+    if (!wechat && !qq) {
+      status.style.color = '#F5A623';
+      status.textContent = '微信号和 QQ 至少填一个';
+      return;
+    }
+    if (qq && !/^[1-9][0-9]{4,13}$/.test(qq)) {
       status.style.color = '#F5A623';
       status.textContent = 'QQ 格式不对';
       return;

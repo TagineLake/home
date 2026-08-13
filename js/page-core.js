@@ -25,10 +25,6 @@
   function getMode() {
     return location.pathname.indexOf('/hard/') >= 0 ? 'hard' : 'easy';
   }
-  function curSegFromFile() {
-    var m = location.pathname.match(/\/(easy|hard)\/index\.html/);
-    return 0; // 单页始终从 0 开始（跑酷会自然推进）
-  }
 
   // ---------- 进度条 ----------
   function buildProgress(mode, currentSeg) {
@@ -60,11 +56,13 @@
       var el = $id('sec-' + secs[i]);
       if (el) el.style.display = (i === seg) ? 'block' : 'none';
     }
-    // 进度条高亮
     var segs = document.querySelectorAll('.mini-progress .seg');
     for (var j = 0; j < segs.length; j++) {
       segs[j].classList.toggle('active', j === seg);
       segs[j].classList.toggle('current', j === seg);
+    }
+    if (window.TLRender && window.TLRender.refreshReveal) {
+      setTimeout(function () { window.TLRender.refreshReveal(); }, 50);
     }
   }
 
@@ -92,18 +90,33 @@
       var fills = document.querySelectorAll('.mini-progress .seg-fill');
       var percents = document.querySelectorAll('.mini-progress .seg-percent');
       var minis = document.querySelectorAll('.mini-progress .seg .mario-mini');
-      setInterval(function () {
-        var elapsed = performance.now() - p.t0;
+      var lastPcts = [-1, -1, -1];
+      var lastCur = -1;
+
+      function tickProgress() {
+        // v8: 用 rAF 替代 setInterval(50ms)；跳过未变化值减少 DOM 写入
+        var elapsed = p.groundTime || 0;
         var total = (elapsed % p.fullLoop) / p.segDuration;
         var cur = Math.floor(total); if (cur >= p.segments) cur = p.segments - 1;
         var segT = total - cur;
+        var needsMiniUpdate = (cur !== lastCur);
         for (var i = 0; i < 3; i++) {
           var pct = (i < cur) ? 1 : (i === cur ? segT : 0);
-          if (fills[i]) fills[i].style.transform = 'scaleX(' + pct.toFixed(3) + ')';
-          if (percents[i]) percents[i].textContent = Math.round(pct * 100) + '%';
-          if (minis[i]) { minis[i].style.left = (pct * 100) + '%'; minis[i].style.display = (i === cur) ? 'block' : 'none'; }
+          var pctR = Math.round(pct * 1000) / 1000;
+          if (Math.abs(pctR - lastPcts[i]) > 0.001) {
+            lastPcts[i] = pctR;
+            if (fills[i]) fills[i].style.transform = 'scaleX(' + pctR.toFixed(3) + ')';
+            if (percents[i]) percents[i].textContent = Math.round(pct * 100) + '%';
+          }
+          if (needsMiniUpdate && minis[i]) {
+            minis[i].style.left = (pct * 100) + '%';
+            minis[i].style.display = (i === cur) ? 'block' : 'none';
+          }
         }
-      }, 50);
+        lastCur = cur;
+        requestAnimationFrame(tickProgress);
+      }
+      requestAnimationFrame(tickProgress);
     });
   }
 
@@ -116,10 +129,9 @@
   // ---------- 启动 ----------
   document.addEventListener('DOMContentLoaded', function () {
     var mode = getMode();
-    var seg = curSegFromFile();
-    buildProgress(mode, seg);
-    showSection(mode, seg);
-    startParkour(mode, seg);
+    buildProgress(mode, 0);
+    showSection(mode, 0);
+    startParkour(mode, 0);
     wireButtons();
   });
 })();

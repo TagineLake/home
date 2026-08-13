@@ -337,56 +337,6 @@
       "category": "其他"
     }
   ],
-  "themes": [
-    {
-      "key": "classic",
-      "name": "经典马里奥",
-      "vars": {
-        "bg": "#5C94FC",
-        "accent": "#E52521",
-        "text": "#FFFFFF",
-        "panel": "#FFFFFF",
-        "ground": "#D07510",
-        "card-bg": "rgba(0,0,0,0.65)"
-      }
-    },
-    {
-      "key": "dark",
-      "name": "我很自闭",
-      "vars": {
-        "bg": "#1a1a2e",
-        "accent": "#7B2CBF",
-        "text": "#E0E0E0",
-        "panel": "#16213E",
-        "ground": "#0F3460",
-        "card-bg": "rgba(0,0,0,0.75)"
-      }
-    },
-    {
-      "key": "warm",
-      "name": "我很开朗",
-      "vars": {
-        "bg": "#FFB347",
-        "accent": "#FF6B35",
-        "text": "#FFFFFF",
-        "panel": "#FFFAF0",
-        "ground": "#C0392B",
-        "card-bg": "rgba(0,0,0,0.5)"
-      }
-    },
-    {
-      "key": "vivid",
-      "name": "我很开心",
-      "vars": {
-        "bg": "#FF6B9D",
-        "accent": "#FFD93D",
-        "text": "#FFFFFF",
-        "panel": "#FFFFFF",
-        "ground": "#6BCB77",
-        "card-bg": "rgba(0,0,0,0.5)"
-      }
-    }
-  ],
   "messagesConfig": {
     "mode": "cloudflare",
     "workerUrl": "",

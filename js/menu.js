@@ -11,7 +11,7 @@
 
   var S = {
     content: null,
-    theme: localStorage.getItem('yz_theme') || 'classic',
+    theme: localStorage.getItem('yz_theme') || 'classic-mario',
     bgmVol: (parseInt(localStorage.getItem('yz_vol_bgm') || '50', 10)) / 100,
     sfxVol: (parseInt(localStorage.getItem('yz_vol_sfx') || '50', 10)) / 100,
     brightness: parseInt(localStorage.getItem('yz_bright') || '100', 10)
@@ -25,44 +25,90 @@
   }
 
   function loadContent() {
-    return fetch(base() + 'data/content.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .catch(function () { return { themes: [], site: {} }; })
-      .then(function (d) { S.content = d; return d; });
+    if (!window._tlContentPromise) {
+      window._tlContentPromise = fetch(base() + 'data/content.json', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .catch(function () { return { themes: [], site: {} }; });
+    }
+    // Always attach our own .then so S.content is set even if the promise
+    // was created by another module (content-render.js / site.js).
+    return window._tlContentPromise.then(function (d) { S.content = d; return d; });
+  }
+
+  // Normalize themes into a flat object map: { key: {key,name,bg,accent,text,panel,ground,pipe,cloud} }
+  // Supports BOTH the old format (array of {key,name,vars:{...}}) and the new
+  // format (object map of {name,bg,accent,...}). This keeps the site working
+  // no matter which format data/content.json uses.
+  function getThemes() {
+    var raw = (S.content && S.content.site && S.content.site.themes) || {};
+    var map = {};
+    if (Array.isArray(raw)) {
+      for (var i = 0; i < raw.length; i++) {
+        var it = raw[i] || {};
+        var v = it.vars || {};
+        var key = it.key || ('t' + i);
+        map[key] = {
+          key: key,
+          name: it.name || key,
+          bg: v.bg || it.bg,
+          accent: v.accent || it.accent,
+          text: v.text || it.text,
+          panel: v.panel || it.panel,
+          ground: v.ground || it.ground,
+          pipe: v.pipe || it.pipe,
+          cloud: v.cloud || it.cloud
+        };
+      }
+    } else {
+      var keys = Object.keys(raw);
+      for (var j = 0; j < keys.length; j++) {
+        var k = keys[j];
+        var t = raw[k] || {};
+        map[k] = { key: k, name: t.name || k, bg: t.bg, accent: t.accent, text: t.text, panel: t.panel, ground: t.ground, pipe: t.pipe, cloud: t.cloud };
+      }
+    }
+    return map;
   }
 
   function applyTheme(key) {
-    var themes = (S.content && S.content.themes) || [];
-    var t = null;
-    for (var i = 0; i < themes.length; i++) if (themes[i].key === key) t = themes[i];
-    if (!t) t = themes[0] || { key: 'classic', vars: {} };
+    var themes = getThemes();
+    if (!themes[key]) {
+      var fk = Object.keys(themes);
+      key = fk.length ? fk[0] : key;
+    }
+    var t = themes[key] || {};
     var root = document.documentElement;
-    var vars = t.vars || {};
-    for (var k in vars) root.style.setProperty('--' + k, vars[k]);
-    root.style.setProperty('--bg', vars.bg || '#5C94FC');
-    root.style.setProperty('--accent', vars.accent || '#E52521');
-    root.style.setProperty('--text', vars.text || '#ffffff');
-    root.style.setProperty('--panel', vars.panel || '#ffffff');
-    root.style.setProperty('--ground', vars.ground || '#D07510');
+    // Theme vars are stored directly on the theme object (bg, text, accent, etc.)
+    root.style.setProperty('--bg', t.bg || '#5C94FC');
+    root.style.setProperty('--accent', t.accent || '#E52521');
+    root.style.setProperty('--text', t.text || '#ffffff');
+    root.style.setProperty('--panel', t.panel || '#ffffff');
+    root.style.setProperty('--ground', t.ground || '#D07510');
+    if (t.pipe) root.style.setProperty('--pipe', t.pipe);
+    if (t.cloud) root.style.setProperty('--cloud', t.cloud);
     S.theme = key;
     try { localStorage.setItem('yz_theme', key); } catch (e) {}
+    // Refresh parkour canvas colors if parkour is running
+    if (window._parkour && window._parkour.refreshThemeColors) window._parkour.refreshThemeColors();
     renderThemes();
   }
 
   function renderThemes() {
     var host = $('theme-buttons');
     if (!host) return;
-    var themes = (S.content && S.content.themes) || [];
+    var themes = getThemes();
     host.innerHTML = '';
-    for (var i = 0; i < themes.length; i++) {
-      (function (t) {
+    var keys = Object.keys(themes);
+    for (var i = 0; i < keys.length; i++) {
+      (function (k) {
+        var t = themes[k];
         var b = document.createElement('button');
-        b.className = 'theme-btn' + (S.theme === t.key ? ' active' : '');
-        b.style.background = (t.vars && t.vars.accent) || '#E52521';
-        b.textContent = t.name || t.key;
-        b.onclick = function () { applyTheme(t.key); };
+        b.className = 'theme-btn' + (S.theme === k ? ' active' : '');
+        b.style.background = (t && t.accent) || '#E52521';
+        b.textContent = (t && t.name) || k;
+        b.onclick = function () { applyTheme(k); };
         host.appendChild(b);
-      })(themes[i]);
+      })(keys[i]);
     }
   }
 
@@ -80,9 +126,18 @@
     if (!contacts.length) { host.innerHTML = '<p style="color:#aaa;font-size:12px;">暂无联系方式</p>'; return; }
     for (var i = 0; i < contacts.length; i++) {
       var c = contacts[i];
+      var label = c.label || c.name || '';
+      var value = c.value !== undefined ? c.value : (c.content || '');
+      var type = c.type || 'text';
       var d = document.createElement('div');
       d.className = 'contact-item';
-      d.innerHTML = '<strong>' + escHtml(c.name) + '</strong>: ' + escHtml(c.content);
+      if (type === 'email' && value) {
+        d.innerHTML = '<strong>' + escHtml(label) + '</strong>: <a href="mailto:' + escHtml(value) + '" style="color:var(--accent);">' + escHtml(value) + '</a>';
+      } else if (type === 'link' && value) {
+        d.innerHTML = '<strong>' + escHtml(label) + '</strong>: <a href="' + escHtml(value) + '" target="_blank" rel="noopener" style="color:var(--accent);">' + escHtml(label) + '</a>';
+      } else {
+        d.innerHTML = '<strong>' + escHtml(label) + '</strong>: ' + escHtml(value);
+      }
       host.appendChild(d);
     }
   }
@@ -162,7 +217,19 @@
     bind();
     setVolumes();
     setBrightness(S.brightness);
-    loadContent().then(function () { applyTheme(S.theme); renderContacts(); });
+    loadContent().then(function () {
+      // Use defaultTheme from content.json if no localStorage preference
+      if (!localStorage.getItem('yz_theme') && S.content && S.content.site && S.content.site.defaultTheme) {
+        S.theme = S.content.site.defaultTheme;
+      }
+      // Fall back to the first available theme if the stored/default key is unknown
+      var themes = getThemes();
+      if (!themes[S.theme]) {
+        var fk = Object.keys(themes);
+        if (fk.length) S.theme = fk[0];
+      }
+      applyTheme(S.theme); renderContacts();
+    });
   }
 
   window.TLMenu = { init: init, open: open, close: close, openExit: openExit, closeExit: closeExit, applyTheme: applyTheme };

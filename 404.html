@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - TagineLake</title>
+  <meta name="description" content="这个管道通向虚无...">
+  <meta property="og:title" content="404 - TagineLake">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="这个管道通向虚无...">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23E52521'/><text x='8' y='12' font-size='10' text-anchor='middle' fill='white'>T</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #5C94FC;
+      --text: #ffffff;
+      --accent: #E52521;
+      --ground: #D07510;
+      --pipe: #43B047;
+      --shadow: 4px 4px 0 rgba(0,0,0,0.4);
+    }
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      overflow: hidden;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .ground {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 30%;
+      background: var(--ground);
+      border-top: 8px solid #000;
+      z-index: 0;
+    }
+    .ground::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 16px;
+      background: repeating-linear-gradient(90deg, transparent 0 30px, rgba(0,0,0,0.15) 30px 60px);
+    }
+    .cloud {
+      position: fixed; width: 80px; height: 30px;
+      background: #fff; border-radius: 50px;
+      animation: cloudMove 30s linear infinite;
+      box-shadow: 20px -15px 0 #fff, 40px 0 0 #fff, 60px -10px 0 #fff;
+      z-index: 1;
+    }
+    @keyframes cloudMove { from { transform: translateX(-200px); } to { transform: translateX(100vw); } }
+    .content {
+      position: relative; z-index: 2;
+      text-align: center;
+    }
+    .error-code {
+      font-size: clamp(48px, 10vw, 96px);
+      color: var(--accent);
+      text-shadow: 6px 6px 0 #000, -3px -3px 0 #fff;
+      letter-spacing: 4px;
+      animation: bounce 1.5s ease-in-out infinite;
+    }
+    @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .error-msg {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: clamp(14px, 2.5vw, 18px);
+      margin-top: 20px; font-weight: 500;
+      color: #fff; text-shadow: 2px 2px 0 #000;
+      line-height: 1.8;
+    }
+    .pipe-graphic {
+      width: 80px; height: 80px;
+      margin: 32px auto 24px;
+      position: relative;
+    }
+    .pipe-graphic::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 80px; height: 24px;
+      background: var(--pipe); border: 4px solid #000;
+    }
+    .pipe-graphic::after {
+      content: ''; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      width: 56px; height: 60px;
+      background: var(--pipe); border: 4px solid #000; border-top: 0;
+    }
+    .pipe-graphic .question {
+      position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+      font-size: 14px; color: #fff; text-shadow: 2px 2px 0 #000;
+      z-index: 1;
+    }
+    .home-btn {
+      font-family: inherit; font-size: 12px;
+      background: var(--accent); color: #fff;
+      border: 3px solid #000; border-radius: 0;
+      padding: 14px 28px; margin-top: 8px;
+      cursor: pointer; text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.45);
+      transition: transform 0.12s cubic-bezier(.2,.8,.3,1), box-shadow 0.12s, filter 0.15s;
+      text-decoration: none; display: inline-block;
+    }
+    .home-btn:hover { filter: brightness(1.18); transform: translateY(-2px); }
+    .home-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 transparent; }
+    .home-btn--green { background: var(--pipe); }
+    .hint {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      margin-top: 24px; text-shadow: 1px 1px 0 #000;
+    }
+    .crt-overlay {
+      position: fixed; inset: 0; z-index: 90; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 3px);
+      opacity: 0.5;
+    }
+    @media (max-width: 768px) {
+      .error-code { font-size: 36px; }
+      .home-btn { font-size: 10px; padding: 10px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-overlay"></div>
+  <div class="ground"></div>
+  <div class="cloud" style="top: 15%; left: 10%;"></div>
+  <div class="cloud" style="top: 25%; left: 60%; animation-duration: 45s; animation-delay: -10s;"></div>
+
+  <div class="content">
+    <div class="error-code">404</div>
+    <div class="pipe-graphic"><span class="question">?</span></div>
+    <p class="error-msg">这个管道通向虚无...<br>马里奥也不知道去哪了</p>
+    <a href="/" class="home-btn">回到起点</a>
+    <p class="hint">按 [开始游戏] 返回首页</p>
+  </div>
+
+  <script>
+    console.log("%c嘿 被你发现了开发者模式! 送你一句：别看了。", "color:#E52521;font-size:16px;font-weight:bold;");
+  </script>
+</body>
+</html>
