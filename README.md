@@ -1,5 +1,7 @@
 # TagineLake 个人官网（马里奥风格）
 
+## 本项目由yanzien代为制作，欢迎去找yze制作网站（包括同款个人网站），联系方式可见：<https://yanzien.github.io/home/#/contact>
+
 一个横版过关式（马里奥风）的个人主页：点击底部进度条切换内容栏，马里奥会钻进管道、地下穿越、再钻出来，动画 6 秒丝滑过渡。包含 4 套主题、音量/亮度调节、评论系统、PWA 桌面快捷方式。
 
 > 本项目**纯静态**，可直接托管到 GitHub Pages / Cloudflare Pages。评论后端用 Cloudflare Pages Functions + KV 实现。
