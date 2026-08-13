@@ -176,9 +176,9 @@
         "日常"
       ],
       "images": [],
-      "likes": 0,
+      "likes": 3,
       "comments": 0,
-      "link": ""
+      "link": "yanzien.github.io/home"
     },
     {
       "id": "f2",
@@ -284,7 +284,7 @@
       "title": "TagineLake 个人官网",
       "type": "网站",
       "status": "doing",
-      "desc": "马里奥风格的横版过关式个人主页，信息栏内含**实时跑酷引擎**。",
+      "desc": "马里奥风格的横版过关式个人主页，信息栏内含**实时跑酷引擎**。\n\n# 非常感谢万分感谢yanzien帮我做这个网站，大家也可以去找他帮忙做这个网站，去他官网<yanzien.github.io/home>联系他",
       "tech": [
         "HTML",
         "CSS",
@@ -297,7 +297,7 @@
   ],
   "abilities": [
     {
-      "name": "HTML / CSS",
+      "name": "HTML / CSS（以下均为示例）",
       "level": 4,
       "category": "前端"
     },
